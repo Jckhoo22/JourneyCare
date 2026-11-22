@@ -1,0 +1,210 @@
+/**
+ * Settings. [SET1, SET2, consistency pass]
+ *
+ * Shell chrome (page, main, back link, h1, panels, buttons) comes from
+ * styles/app-shell.css. The card is a two-field settings list — one editable
+ * (display name), one read-only (email) — sharing the same label/value
+ * anatomy so the reader's eye lands on the same left edge for both.
+ *
+ * ── One anatomy, two fields ──────────────────────────────────────────────
+ * Every field is a `.settings-field` block: `.settings-field-head` (label +
+ * any inline status pill) on top, value below (an `<input>` for editable,
+ * plain text for read-only), optional `.settings-helper` under the value.
+ * Neither field carries a leading icon — a decorative person/envelope
+ * pushed the value into a second column and read as placeholder text.
+ *
+ * ── Rhythm ───────────────────────────────────────────────────────────────
+ * Card is `p-4` from `.app-panel`. Fields are separated by a slim hairline
+ * `.settings-divider` with `my-4` on each side; no bigger "band" between
+ * them. `settings-card` overrides `.app-panel`'s `overflow-anchor` and
+ * anything else that would fight the tight, list-like look.
+ */
+
+/* ── Field ─────────────────────────────────────────────────────────────── */
+.settings-field {
+    display: flex;
+    flex-direction: column;
+}
+
+/*
+ * Label row: label on the left, inline "Saved ✓" pill on the right when the
+ * form has just written. Baseline-aligned so the pill sits on the label's
+ * baseline rather than floating above it.
+ */
+.settings-field-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: 6px;
+}
+
+.settings-field-label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-body);
+}
+
+/* ── Editable input ────────────────────────────────────────────────────── */
+.settings-input {
+    width: 100%;
+    min-height: var(--control-height);
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-field);
+    /* --text-body is 16px, which is also the iOS floor that stops focus zoom. */
+    font-size: var(--text-body);
+    font-weight: var(--weight-normal);
+    color: var(--color-text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.settings-input::placeholder {
+    color: var(--color-text-faint);
+}
+.settings-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+.settings-input:disabled {
+    background-color: var(--color-surface-muted);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+.settings-input.has-error {
+    border-color: var(--color-error);
+}
+
+/* ── Read-only value ──────────────────────────────────────────────────────
+   Deliberately NOT a `<input disabled>`. A greyed-out field reads as "you
+   may be able to edit this later, or you've done something wrong" — it
+   invites a tap that does nothing. Plain text under the same label style
+   as the editable field says the same thing without pretending to be a
+   control. `overflow-wrap: anywhere` because an email is one unbroken
+   token and will happily push a 375px screen sideways. */
+.settings-value {
+    margin: 0;
+    min-height: var(--control-height);
+    display: flex;
+    align-items: center;
+    font-size: var(--text-body);
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+/* ── Helper / error copy ──────────────────────────────────────────────────
+   The name field's helper only renders when it's carrying an error, so
+   the base treatment IS the error line. The email's persistent hint uses
+   the same class without the `-error` modifier and reads as the faintest
+   grey — one grammar for both fields' subtext. */
+.settings-helper {
+    margin: var(--space-1) 0 0 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-faint);
+}
+.settings-helper-error {
+    color: var(--color-error-text);
+}
+
+/* ── Section labels ────────────────────────────────────────────────────
+   Muted eyebrow above each of the three sections (Profile / Account /
+   Preferences). Small, uppercase, tracking-wide — the same treatment
+   the field labels use, one size tighter. Sits between the divider and
+   the first field of its section. */
+.settings-section-label {
+    margin: 0 0 var(--space-2) 0;
+    font-size: var(--text-label, var(--text-xs));
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-subtle);
+}
+/* First section's label sits flush against the card's top padding
+   without extra space above. */
+.settings-card > .settings-section-label:first-child {
+    margin-top: 0;
+}
+
+/* ── Sign-out button — ghost variant ──────────────────────────────────
+   Full width, hairline gray border, red foreground on both the icon
+   and the label. No red border, no red fill — the button is the ONLY
+   red on the page (BackLink, section labels, helpers all sit in the
+   gray/teal palette), so recognition doesn't need extra weight. Uses
+   `variant="secondary"` from Button which supplies width/height/tap-
+   target chrome; this class just overrides the color to red. */
+.settings-signout.app-btn-secondary {
+    color: var(--color-error-text);
+}
+.settings-signout.app-btn-secondary:hover:not(:disabled) {
+    /* Very soft red tint so the hover shows without turning the button
+       into a full danger control. */
+    background-color: var(
+        --color-error-soft,
+        rgba(220, 38, 38, 0.06)
+    );
+    color: var(--color-error-text);
+    border-color: var(--color-border-strong, var(--color-border));
+}
+.settings-signout.app-btn-secondary svg {
+    color: var(--color-error-text);
+}
+
+/* ── "Saved ✓" inline confirmation ────────────────────────────────────────
+   Appears next to the label for ~2s after a successful rename. Text sits
+   in the accent so the reader can see the field answered without a big
+   card-level banner. The mount/unmount is driven from the component; a
+   short CSS transition softens the entrance and exit. */
+.settings-saved {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-primary);
+    animation: settings-saved-fade 2s ease-out forwards;
+}
+
+@keyframes settings-saved-fade {
+    0% {
+        opacity: 0;
+    }
+    10%,
+    70% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .settings-saved {
+        animation: none;
+    }
+}
+
+/* ── Form + divider ──────────────────────────────────────────────────────
+   `gap: 0` on the form so the divider carries the whole between-fields
+   spacing (my-4 = 16px each side) rather than double-counting with a
+   flex gap. */
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.settings-divider {
+    margin: var(--space-4) 0;
+    border: 0;
+    border-top: 1px solid var(--color-border-subtle);
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────
+   Replaces the old About card — one muted line, centered under Sign out. */
+.settings-footer {
+    margin: var(--space-2) 0 0 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+    text-align: center;
+}

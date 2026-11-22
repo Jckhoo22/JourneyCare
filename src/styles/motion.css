@@ -1,0 +1,110 @@
+/**
+ * Phase 5: restrained motion.
+ *
+ * Everything in here sits inside `@media (prefers-reduced-motion:
+ * no-preference)` — the animations do not exist for anyone who has asked
+ * their OS not to move things. `prefers-reduced-motion: reduce` in
+ * index.css already clips animation-duration to 0.01ms as a safety net;
+ * the gate here is the primary defense.
+ *
+ * Three devices are shared here so components don't reinvent them:
+ *   .stagger-in > *   — list children fade + rise on mount, with a 30ms
+ *                       stagger via nth-child up to 8 items. Beyond 8,
+ *                       everything animates together at the last delay.
+ *   .content-enter    — a single element (or subtree) fades in with a
+ *                       2–4px rise when it replaces a skeleton. Timing
+ *                       matches cardEnter so the two motions read as one
+ *                       language. Applied by <FadeSwap> so every screen
+ *                       gets the same 200ms swap.
+ *   card hover/press  — .car-card, .group-card, .group-nav-item lift 1px
+ *                       under a deeper shadow on hover, and press flat.
+ */
+
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes cardEnter {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stagger-in > * {
+        opacity: 0;
+        animation: cardEnter 0.22s ease-out forwards;
+    }
+
+    /* Skeleton → content swap. Runs on the content wrapper when it mounts,
+       so the skeleton unmounting and the content fading in happen over the
+       same 200ms — it reads as one motion, not "gone / arrived". Rise is
+       kept small (3px) so nothing feels like it slid. */
+    @keyframes contentEnter {
+        from {
+            opacity: 0;
+            transform: translateY(3px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* The wrapper itself generates no box (`display: contents`), so it
+       doesn't break the parent's flex-gap or grid layout when FadeSwap
+       drops it in. The animation runs on each direct child — a section, a
+       panel, an action — and every child mounts at the same moment because
+       FadeSwap only wraps when it swapped out of a skeleton. */
+    .content-enter {
+        display: contents;
+    }
+    .content-enter > * {
+        animation: contentEnter 0.2s ease-out both;
+    }
+
+    /* Image inside a photo frame reserved with aspect-ratio. Starts
+       transparent; the component drops .is-loaded on decode and the
+       image eases in without shifting the frame. */
+    .fade-in-on-load {
+        opacity: 0;
+        transition: opacity 0.2s ease-out;
+    }
+    .fade-in-on-load.is-loaded {
+        opacity: 1;
+    }
+
+    /* Up to 8 items in a 30ms stagger. A list of 3 groups feels sequential;
+       a list of 12 due items would take 360ms if we ran the whole thing —
+       past a certain point the eye stops parsing it as a stagger and starts
+       reading it as slow. Cap at 8 and let the rest arrive together. */
+    .stagger-in > *:nth-child(1)  { animation-delay: 0ms; }
+    .stagger-in > *:nth-child(2)  { animation-delay: 30ms; }
+    .stagger-in > *:nth-child(3)  { animation-delay: 60ms; }
+    .stagger-in > *:nth-child(4)  { animation-delay: 90ms; }
+    .stagger-in > *:nth-child(5)  { animation-delay: 120ms; }
+    .stagger-in > *:nth-child(6)  { animation-delay: 150ms; }
+    .stagger-in > *:nth-child(7)  { animation-delay: 180ms; }
+    .stagger-in > *:nth-child(8)  { animation-delay: 210ms; }
+    .stagger-in > *:nth-child(n + 9) { animation-delay: 210ms; }
+
+    /* Clickable card hover: lift 1px, deepen shadow slightly. The chevron
+       nudge each component defines separately still fires. */
+    .car-card:hover,
+    .group-card:hover,
+    .group-nav-item:hover {
+        transform: translateY(-1px);
+        box-shadow:
+            0 2px 4px rgba(28, 25, 23, 0.08),
+            0 8px 20px -6px rgba(28, 25, 23, 0.08);
+    }
+
+    /* Pressed: flat. Physical feedback without a colour flash. */
+    .car-card:active,
+    .group-card:active,
+    .group-nav-item:active {
+        transform: translateY(0);
+        box-shadow: var(--shadow-card);
+    }
+}

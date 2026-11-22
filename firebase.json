@@ -1,0 +1,52 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "//headers": "ORDER IS LOAD-BEARING. Firebase Hosting applies every matching entry and, for the same header key, the one defined LAST wins — the opposite of rewrites, where the first match wins. This block used to list /assets/** first and /** last, which meant the catch-all silently overrode it and every fingerprinted asset shipped as no-cache: a full re-download of the whole bundle on every visit. Broad first, specific last. Verify after any change with: curl -sI https://car-log-project.web.app/assets/<hashed>.js",
+    "headers": [
+      {
+        "//": "Default for everything the SPA rewrite serves as index.html. A stale copy would pin users to an old build, because it is what points at the current asset hashes.",
+        "source": "/**",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, max-age=0" }
+        ]
+      },
+      {
+        "//": "Stated explicitly as well as via /**, so the intent survives a future edit to the catch-all.",
+        "source": "/index.html",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache, max-age=0" }
+        ]
+      },
+      {
+        "//": "LAST, so it beats the catch-all above. Vite fingerprints these filenames, so a changed file is a changed URL — safe to cache forever.",
+        "source": "/assets/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      }
+    ]
+  },
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    },
+    "ui": {
+      "enabled": false
+    },
+    "singleProjectMode": true
+  }
+}

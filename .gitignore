@@ -1,0 +1,47 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/dist
+/build
+
+# misc
+.DS_Store
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+*service-account*.json
+*serviceAccount*.json
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# firebase
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+
+# editor
+.idea/
+.claude/
+
+# scratch notes — not project history
+jc_unhappy_problem.txt
+
+# design preview harness (dev-only; see vite.preview.config.ts)
+/preview
+/vite.preview.config.ts
+/screenshots
+/.local-notes/

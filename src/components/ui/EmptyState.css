@@ -1,0 +1,49 @@
+/**
+ * Empty-state primitive. [UX pass R7]
+ *
+ * Card chrome comes from `.app-empty` (padding, border, shadow, radius) —
+ * this stylesheet adds the glyph chip and the action row that sits inside.
+ */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    text-align: center;
+}
+
+/* The tinted mark above the title — either an icon or an emoji. Same 5rem
+   chip the home + group-empty states used before this primitive existed,
+   so the visual doesn't shift when a page swaps in `<EmptyState>`. */
+.empty-state-glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 5rem;
+    height: 5rem;
+    background-color: var(--color-accent-tint);
+    border-radius: var(--radius-card);
+    color: var(--color-primary);
+    font-size: 2.5rem;
+    line-height: 1;
+    user-select: none;
+}
+
+/* Actions row inside the empty state. Stacked on a phone, side-by-side on
+   wider screens — matches the `.app-actions` pattern so the button widths
+   feel consistent with the rest of the app. */
+.empty-state-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: 100%;
+    margin-top: var(--space-4);
+}
+
+@media (min-width: 600px) {
+    .empty-state-actions {
+        flex-direction: row;
+        justify-content: center;
+    }
+}

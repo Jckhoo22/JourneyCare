@@ -1,0 +1,184 @@
+/**
+ * Manage group screen. [UX phase-2, 2d + Manage polish]
+ *
+ * ── One row grammar ─────────────────────────────────────────────────────
+ * Invite people, Members and Group name all render as identical chevron
+ * rows in the Manage polish pass: teal-tint icon circle + verb-first
+ * title + one-line subtitle + chevron. The previous bordered "Rename"
+ * button on the Group name row is gone; tapping the whole row opens the
+ * GroupNameEditor form below.
+ *
+ * ── Icon treatment ──────────────────────────────────────────────────────
+ * 36px `--radius-pill` circles filled with `--color-primary-soft`, icon
+ * strokes in `--color-primary`. One treatment across the whole card so
+ * the three rows read as siblings, not three separate patterns. The
+ * previous grey square tiles were doing quiet-chrome work the app's
+ * hairline dividers already do.
+ *
+ * ── Fix totals ──────────────────────────────────────────────────────────
+ * Restyled as an intentional footer utility in this pass: centred,
+ * text-xs, gray-400 at rest, underline only on hover, mt-6. A rare
+ * "only if a number looks wrong" action shouldn't compete with anything
+ * on the page; the previous underlined-at-rest link kept catching the
+ * eye. Confirm-dialog behaviour is untouched.
+ */
+
+.manage-nav {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    /* clip so hover backgrounds and the button reset stay inside the
+       rounded corners */
+    overflow: hidden;
+}
+
+.manage-nav-item {
+    /* Base row: shared layout for the two <Link>s, the <button> (Group
+       name row) and the read-only <div> members see for that row.
+       All four normalise to the same visual — border-none, no button
+       chrome, no default padding — so hairline dividers and hover
+       backgrounds land the same on every row. */
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 3.5rem; /* 56px */
+    padding: var(--space-3) var(--space-4);
+    background: none;
+    border: none;
+    border-top: 1px solid var(--color-border-subtle);
+    text-align: left;
+    text-decoration: none;
+    color: inherit;
+    font: inherit;
+    transition: background-color 0.15s;
+}
+.manage-nav-item:first-child {
+    border-top: none;
+}
+
+/* Whole-row target — every interactive row shares this modifier so
+   hover/focus states are identical across rows regardless of whether the
+   row is an <a> or a <button>. */
+.manage-nav-link {
+    cursor: pointer;
+}
+.manage-nav-link:hover {
+    background-color: var(--color-surface-muted);
+}
+.manage-nav-link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
+
+/* Static row — used only for the Group name row when the viewer is not
+   the owner (nothing to open). No cursor, no hover — reads as a display
+   of the current name, not an action. */
+.manage-nav-static {
+    cursor: default;
+}
+
+/* ── Teal-tint icon circle ─────────────────────────────────────────────
+   One treatment across all rows so the card reads as one system. The
+   soft-teal token is bright enough that the icon reads clearly and dim
+   enough that it doesn't compete with the row text. Both theme accents
+   (teal + mono) flip this automatically via --color-primary/-soft. */
+.manage-nav-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-primary-soft);
+    border-radius: var(--radius-pill);
+    color: var(--color-primary);
+}
+
+.manage-nav-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.manage-nav-title {
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+}
+
+.manage-nav-hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Group name subtitle carries the CURRENT group name, which is a live
+   value rather than descriptive helper — nudge it to the readable
+   body-secondary size. Truncation from .manage-nav-hint above still
+   applies, so a very long name ellipses rather than wraps. */
+.manage-nav-hint-strong {
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+
+.manage-nav-chevron {
+    flex-shrink: 0;
+    color: var(--color-text-faint);
+    transition: transform 0.15s;
+}
+.manage-nav-link:hover .manage-nav-chevron {
+    transform: translateX(2px);
+}
+
+/* ── Fix totals — quiet footer utility [Manage polish] ─────────────────
+   Centred, text-xs, gray-400 at rest with no underline. Underline only
+   on hover so the eye doesn't catch the link every time the page loads.
+   The previous version underlined at rest and used --text-sm, which made
+   a rare repair tool read as one more link. The confirm-dialog stays
+   above the page — clicking still opens it, then the dialog carries the
+   weight of confirming the read-heavy action. */
+.manage-fix {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-6);
+}
+
+.manage-fix-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Kept ≥44px tall via padding for the tap target, but visually the
+       label reads at text-xs — the link is text with a hit area, not a
+       button. */
+    min-height: var(--tap-min);
+    padding: 0 var(--space-3);
+    background: none;
+    border: none;
+    color: var(--color-text-faint);
+    font-size: var(--text-xs);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s, text-decoration-color 0.15s;
+}
+.manage-fix-link:hover:not(:disabled) {
+    color: var(--color-text-subtle);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.manage-fix-link:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.manage-fix-link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-field);
+}

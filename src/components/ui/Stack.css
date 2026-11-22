@@ -1,0 +1,32 @@
+/**
+ * Stack layout primitive. [UX pass R4]
+ *
+ * Three gap tokens map to related-items / inside-a-card / between-sections
+ * spacing. Kept as CSS classes rather than inline styles so a designer can
+ * tune the scale in one place and every screen picks it up.
+ */
+
+.stack {
+    display: flex;
+    flex-direction: column;
+}
+
+.stack-sm {
+    gap: var(--space-3);   /* 12px — related items */
+}
+
+.stack-md {
+    gap: var(--space-4);   /* 16px — inside a card */
+}
+
+.stack-lg {
+    gap: var(--space-6);   /* 24px — between sections */
+}
+
+@media (min-width: 600px) {
+    /* Slightly wider gutter between sections on tablet/desktop, so the page
+       doesn't read as one tight column when the viewport can afford air. */
+    .stack-lg {
+        gap: var(--space-8);   /* 32px */
+    }
+}

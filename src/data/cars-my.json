@@ -1,0 +1,1454 @@
+{
+    "//": "Bundled brand → model → year data [C2]. Malaysia-focused and hand-curated: this ships with the app, so there is no API, no key and no network call in the add-car flow. `from` is the first model year sold here; `to` is present only for models no longer sold, and its absence means 'still current'. Perodua and Proton lead the list because they are most of the cars on the road here; everything after them is alphabetical, which is how you scan a list this long. Year ranges are approximate where a launch date was unclear — they bound a picker, not a registry, so erring wide costs nothing. The list still does not need to be exhaustive: the Other escape hatch below covers everything it misses.",
+    "otherBrand": "Other",
+    "brands": [
+        {
+            "name": "Perodua",
+            "models": [
+                {
+                    "name": "Myvi",
+                    "from": 2005
+                },
+                {
+                    "name": "Axia",
+                    "from": 2014
+                },
+                {
+                    "name": "Bezza",
+                    "from": 2016
+                },
+                {
+                    "name": "Alza",
+                    "from": 2009
+                },
+                {
+                    "name": "Aruz",
+                    "from": 2019
+                },
+                {
+                    "name": "Ativa",
+                    "from": 2021
+                },
+                {
+                    "name": "Viva",
+                    "from": 2007,
+                    "to": 2014
+                },
+                {
+                    "name": "Kelisa",
+                    "from": 2001,
+                    "to": 2007
+                },
+                {
+                    "name": "Kenari",
+                    "from": 2000,
+                    "to": 2009
+                },
+                {
+                    "name": "Kancil",
+                    "from": 1994,
+                    "to": 2009
+                },
+                {
+                    "name": "Nautica",
+                    "from": 2008,
+                    "to": 2010
+                }
+            ]
+        },
+        {
+            "name": "Proton",
+            "models": [
+                {
+                    "name": "Saga",
+                    "from": 1985
+                },
+                {
+                    "name": "Persona",
+                    "from": 2007
+                },
+                {
+                    "name": "Iriz",
+                    "from": 2014
+                },
+                {
+                    "name": "Exora",
+                    "from": 2009
+                },
+                {
+                    "name": "X50",
+                    "from": 2020
+                },
+                {
+                    "name": "X70",
+                    "from": 2018
+                },
+                {
+                    "name": "X90",
+                    "from": 2023
+                },
+                {
+                    "name": "S70",
+                    "from": 2023
+                },
+                {
+                    "name": "Preve",
+                    "from": 2012,
+                    "to": 2018
+                },
+                {
+                    "name": "Suprima S",
+                    "from": 2013,
+                    "to": 2019
+                },
+                {
+                    "name": "Inspira",
+                    "from": 2010,
+                    "to": 2015
+                },
+                {
+                    "name": "Gen-2",
+                    "from": 2004,
+                    "to": 2012
+                },
+                {
+                    "name": "Waja",
+                    "from": 2000,
+                    "to": 2011
+                },
+                {
+                    "name": "Satria",
+                    "from": 1994,
+                    "to": 2015
+                },
+                {
+                    "name": "Wira",
+                    "from": 1993,
+                    "to": 2009
+                },
+                {
+                    "name": "Perdana",
+                    "from": 1995,
+                    "to": 2020
+                }
+            ]
+        },
+        {
+            "name": "Alfa Romeo",
+            "models": [
+                {
+                    "name": "Giulia",
+                    "from": 2016
+                },
+                {
+                    "name": "Stelvio",
+                    "from": 2017
+                },
+                {
+                    "name": "Giulietta",
+                    "from": 2011,
+                    "to": 2020
+                }
+            ]
+        },
+        {
+            "name": "Audi",
+            "models": [
+                {
+                    "name": "A3",
+                    "from": 1997
+                },
+                {
+                    "name": "A4",
+                    "from": 1995
+                },
+                {
+                    "name": "A5",
+                    "from": 2008
+                },
+                {
+                    "name": "A6",
+                    "from": 1995
+                },
+                {
+                    "name": "A7",
+                    "from": 2011
+                },
+                {
+                    "name": "A8",
+                    "from": 1995
+                },
+                {
+                    "name": "Q2",
+                    "from": 2017
+                },
+                {
+                    "name": "Q3",
+                    "from": 2012
+                },
+                {
+                    "name": "Q5",
+                    "from": 2009
+                },
+                {
+                    "name": "Q7",
+                    "from": 2006
+                },
+                {
+                    "name": "Q8",
+                    "from": 2019
+                },
+                {
+                    "name": "e-tron",
+                    "from": 2019
+                },
+                {
+                    "name": "TT",
+                    "from": 1999,
+                    "to": 2023
+                }
+            ]
+        },
+        {
+            "name": "BMW",
+            "models": [
+                {
+                    "name": "1 Series",
+                    "from": 2004
+                },
+                {
+                    "name": "2 Series",
+                    "from": 2014
+                },
+                {
+                    "name": "3 Series",
+                    "from": 1990
+                },
+                {
+                    "name": "4 Series",
+                    "from": 2013
+                },
+                {
+                    "name": "5 Series",
+                    "from": 1990
+                },
+                {
+                    "name": "7 Series",
+                    "from": 1990
+                },
+                {
+                    "name": "X1",
+                    "from": 2009
+                },
+                {
+                    "name": "X3",
+                    "from": 2003
+                },
+                {
+                    "name": "X4",
+                    "from": 2014
+                },
+                {
+                    "name": "X5",
+                    "from": 1999
+                },
+                {
+                    "name": "X7",
+                    "from": 2019
+                },
+                {
+                    "name": "i4",
+                    "from": 2021
+                },
+                {
+                    "name": "iX",
+                    "from": 2021
+                },
+                {
+                    "name": "Z4",
+                    "from": 2002
+                }
+            ]
+        },
+        {
+            "name": "BYD",
+            "models": [
+                {
+                    "name": "Atto 3",
+                    "from": 2022
+                },
+                {
+                    "name": "Dolphin",
+                    "from": 2023
+                },
+                {
+                    "name": "Seal",
+                    "from": 2023
+                },
+                {
+                    "name": "Sealion 6",
+                    "from": 2024
+                },
+                {
+                    "name": "Sealion 7",
+                    "from": 2024
+                },
+                {
+                    "name": "M6",
+                    "from": 2024
+                }
+            ]
+        },
+        {
+            "name": "Chery",
+            "models": [
+                {
+                    "name": "Omoda 5",
+                    "from": 2023
+                },
+                {
+                    "name": "Tiggo 4 Pro",
+                    "from": 2024
+                },
+                {
+                    "name": "Tiggo 7 Pro",
+                    "from": 2023
+                },
+                {
+                    "name": "Tiggo 8 Pro",
+                    "from": 2023
+                },
+                {
+                    "name": "QQ",
+                    "from": 2005,
+                    "to": 2012
+                },
+                {
+                    "name": "Eastar",
+                    "from": 2006,
+                    "to": 2011
+                }
+            ]
+        },
+        {
+            "name": "Chevrolet",
+            "models": [
+                {
+                    "name": "Cruze",
+                    "from": 2009,
+                    "to": 2018
+                },
+                {
+                    "name": "Captiva",
+                    "from": 2007,
+                    "to": 2018
+                },
+                {
+                    "name": "Colorado",
+                    "from": 2012,
+                    "to": 2018
+                },
+                {
+                    "name": "Aveo",
+                    "from": 2005,
+                    "to": 2011
+                },
+                {
+                    "name": "Optra",
+                    "from": 2004,
+                    "to": 2010
+                }
+            ]
+        },
+        {
+            "name": "Citroen",
+            "models": [
+                {
+                    "name": "C3",
+                    "from": 2010
+                },
+                {
+                    "name": "C4",
+                    "from": 2005
+                },
+                {
+                    "name": "C5",
+                    "from": 2005
+                },
+                {
+                    "name": "Grand C4 Picasso",
+                    "from": 2014,
+                    "to": 2020
+                }
+            ]
+        },
+        {
+            "name": "Daihatsu",
+            "models": [
+                {
+                    "name": "Gran Max",
+                    "from": 2008
+                }
+            ]
+        },
+        {
+            "name": "Ford",
+            "models": [
+                {
+                    "name": "Ranger",
+                    "from": 1999
+                },
+                {
+                    "name": "Everest",
+                    "from": 2003
+                },
+                {
+                    "name": "Mustang",
+                    "from": 2016
+                },
+                {
+                    "name": "Focus",
+                    "from": 2005,
+                    "to": 2019
+                },
+                {
+                    "name": "Fiesta",
+                    "from": 2009,
+                    "to": 2017
+                },
+                {
+                    "name": "Mondeo",
+                    "from": 1996,
+                    "to": 2019
+                },
+                {
+                    "name": "EcoSport",
+                    "from": 2013,
+                    "to": 2020
+                },
+                {
+                    "name": "Kuga",
+                    "from": 2013,
+                    "to": 2017
+                }
+            ]
+        },
+        {
+            "name": "GWM",
+            "models": [
+                {
+                    "name": "Haval H6",
+                    "from": 2022
+                },
+                {
+                    "name": "Haval Jolion",
+                    "from": 2022
+                },
+                {
+                    "name": "Ora Good Cat",
+                    "from": 2022
+                },
+                {
+                    "name": "Tank 300",
+                    "from": 2023
+                },
+                {
+                    "name": "Poer",
+                    "from": 2021
+                }
+            ]
+        },
+        {
+            "name": "Honda",
+            "models": [
+                {
+                    "name": "City",
+                    "from": 1996
+                },
+                {
+                    "name": "Civic",
+                    "from": 1990
+                },
+                {
+                    "name": "Accord",
+                    "from": 1990
+                },
+                {
+                    "name": "Jazz",
+                    "from": 2003
+                },
+                {
+                    "name": "HR-V",
+                    "from": 2015
+                },
+                {
+                    "name": "CR-V",
+                    "from": 1997
+                },
+                {
+                    "name": "BR-V",
+                    "from": 2017
+                },
+                {
+                    "name": "WR-V",
+                    "from": 2023
+                },
+                {
+                    "name": "Odyssey",
+                    "from": 2003
+                },
+                {
+                    "name": "Freed",
+                    "from": 2010,
+                    "to": 2016
+                },
+                {
+                    "name": "Stream",
+                    "from": 2001,
+                    "to": 2014
+                },
+                {
+                    "name": "CR-Z",
+                    "from": 2011,
+                    "to": 2016
+                }
+            ]
+        },
+        {
+            "name": "Hyundai",
+            "models": [
+                {
+                    "name": "Elantra",
+                    "from": 2001
+                },
+                {
+                    "name": "Tucson",
+                    "from": 2005
+                },
+                {
+                    "name": "Santa Fe",
+                    "from": 2001
+                },
+                {
+                    "name": "Sonata",
+                    "from": 1999
+                },
+                {
+                    "name": "Kona",
+                    "from": 2018
+                },
+                {
+                    "name": "Ioniq",
+                    "from": 2017
+                },
+                {
+                    "name": "Ioniq 5",
+                    "from": 2021
+                },
+                {
+                    "name": "Ioniq 6",
+                    "from": 2023
+                },
+                {
+                    "name": "Starex",
+                    "from": 2005,
+                    "to": 2021
+                },
+                {
+                    "name": "i10",
+                    "from": 2008,
+                    "to": 2016
+                },
+                {
+                    "name": "i30",
+                    "from": 2008,
+                    "to": 2017
+                },
+                {
+                    "name": "Accent",
+                    "from": 2001,
+                    "to": 2012
+                }
+            ]
+        },
+        {
+            "name": "Isuzu",
+            "models": [
+                {
+                    "name": "D-Max",
+                    "from": 2003
+                },
+                {
+                    "name": "MU-X",
+                    "from": 2014
+                },
+                {
+                    "name": "MU-7",
+                    "from": 2005,
+                    "to": 2013
+                }
+            ]
+        },
+        {
+            "name": "Jaguar",
+            "models": [
+                {
+                    "name": "XE",
+                    "from": 2015
+                },
+                {
+                    "name": "XF",
+                    "from": 2008
+                },
+                {
+                    "name": "F-Pace",
+                    "from": 2016
+                },
+                {
+                    "name": "E-Pace",
+                    "from": 2018
+                },
+                {
+                    "name": "F-Type",
+                    "from": 2013
+                },
+                {
+                    "name": "XJ",
+                    "from": 1995,
+                    "to": 2019
+                }
+            ]
+        },
+        {
+            "name": "Jeep",
+            "models": [
+                {
+                    "name": "Wrangler",
+                    "from": 2007
+                },
+                {
+                    "name": "Grand Cherokee",
+                    "from": 1995
+                },
+                {
+                    "name": "Compass",
+                    "from": 2007
+                },
+                {
+                    "name": "Renegade",
+                    "from": 2015
+                }
+            ]
+        },
+        {
+            "name": "Kia",
+            "models": [
+                {
+                    "name": "Picanto",
+                    "from": 2004
+                },
+                {
+                    "name": "Rio",
+                    "from": 2005
+                },
+                {
+                    "name": "Cerato",
+                    "from": 2004
+                },
+                {
+                    "name": "Optima",
+                    "from": 2001
+                },
+                {
+                    "name": "Sportage",
+                    "from": 2005
+                },
+                {
+                    "name": "Sorento",
+                    "from": 2002
+                },
+                {
+                    "name": "Carnival",
+                    "from": 1999
+                },
+                {
+                    "name": "Seltos",
+                    "from": 2020
+                },
+                {
+                    "name": "EV6",
+                    "from": 2022
+                },
+                {
+                    "name": "Carens",
+                    "from": 2000,
+                    "to": 2013
+                },
+                {
+                    "name": "Forte",
+                    "from": 2009,
+                    "to": 2013
+                }
+            ]
+        },
+        {
+            "name": "Land Rover",
+            "models": [
+                {
+                    "name": "Defender",
+                    "from": 1990
+                },
+                {
+                    "name": "Discovery",
+                    "from": 1994
+                },
+                {
+                    "name": "Discovery Sport",
+                    "from": 2015
+                },
+                {
+                    "name": "Range Rover",
+                    "from": 1995
+                },
+                {
+                    "name": "Range Rover Sport",
+                    "from": 2005
+                },
+                {
+                    "name": "Range Rover Evoque",
+                    "from": 2011
+                },
+                {
+                    "name": "Range Rover Velar",
+                    "from": 2017
+                }
+            ]
+        },
+        {
+            "name": "Lexus",
+            "models": [
+                {
+                    "name": "ES",
+                    "from": 1990
+                },
+                {
+                    "name": "IS",
+                    "from": 1999
+                },
+                {
+                    "name": "LS",
+                    "from": 1990
+                },
+                {
+                    "name": "NX",
+                    "from": 2014
+                },
+                {
+                    "name": "RX",
+                    "from": 1998
+                },
+                {
+                    "name": "UX",
+                    "from": 2019
+                },
+                {
+                    "name": "LX",
+                    "from": 1996
+                },
+                {
+                    "name": "GX",
+                    "from": 2003
+                },
+                {
+                    "name": "LM",
+                    "from": 2020
+                }
+            ]
+        },
+        {
+            "name": "Mazda",
+            "models": [
+                {
+                    "name": "Mazda2",
+                    "from": 2008
+                },
+                {
+                    "name": "Mazda3",
+                    "from": 2004
+                },
+                {
+                    "name": "Mazda6",
+                    "from": 2003
+                },
+                {
+                    "name": "CX-3",
+                    "from": 2015
+                },
+                {
+                    "name": "CX-30",
+                    "from": 2020
+                },
+                {
+                    "name": "CX-5",
+                    "from": 2012
+                },
+                {
+                    "name": "CX-8",
+                    "from": 2018
+                },
+                {
+                    "name": "CX-9",
+                    "from": 2007
+                },
+                {
+                    "name": "CX-60",
+                    "from": 2023
+                },
+                {
+                    "name": "MX-5",
+                    "from": 1990
+                },
+                {
+                    "name": "BT-50",
+                    "from": 2007
+                }
+            ]
+        },
+        {
+            "name": "Mercedes-Benz",
+            "models": [
+                {
+                    "name": "A-Class",
+                    "from": 1997
+                },
+                {
+                    "name": "B-Class",
+                    "from": 2005
+                },
+                {
+                    "name": "C-Class",
+                    "from": 1993
+                },
+                {
+                    "name": "E-Class",
+                    "from": 1993
+                },
+                {
+                    "name": "S-Class",
+                    "from": 1990
+                },
+                {
+                    "name": "CLA",
+                    "from": 2013
+                },
+                {
+                    "name": "GLA",
+                    "from": 2014
+                },
+                {
+                    "name": "GLB",
+                    "from": 2019
+                },
+                {
+                    "name": "GLC",
+                    "from": 2015
+                },
+                {
+                    "name": "GLE",
+                    "from": 2015
+                },
+                {
+                    "name": "GLS",
+                    "from": 2016
+                },
+                {
+                    "name": "EQA",
+                    "from": 2021
+                },
+                {
+                    "name": "EQB",
+                    "from": 2021
+                },
+                {
+                    "name": "EQS",
+                    "from": 2021
+                },
+                {
+                    "name": "V-Class",
+                    "from": 2014
+                }
+            ]
+        },
+        {
+            "name": "MINI",
+            "models": [
+                {
+                    "name": "3-Door Hatch",
+                    "from": 2002
+                },
+                {
+                    "name": "5-Door Hatch",
+                    "from": 2014
+                },
+                {
+                    "name": "Countryman",
+                    "from": 2010
+                },
+                {
+                    "name": "Clubman",
+                    "from": 2008,
+                    "to": 2024
+                },
+                {
+                    "name": "Convertible",
+                    "from": 2004
+                }
+            ]
+        },
+        {
+            "name": "Mitsubishi",
+            "models": [
+                {
+                    "name": "Triton",
+                    "from": 2006
+                },
+                {
+                    "name": "Xpander",
+                    "from": 2018
+                },
+                {
+                    "name": "Outlander",
+                    "from": 2004
+                },
+                {
+                    "name": "ASX",
+                    "from": 2010
+                },
+                {
+                    "name": "Attrage",
+                    "from": 2013
+                },
+                {
+                    "name": "Pajero Sport",
+                    "from": 2008
+                },
+                {
+                    "name": "Lancer",
+                    "from": 1990,
+                    "to": 2017
+                }
+            ]
+        },
+        {
+            "name": "Naza",
+            "models": [
+                {
+                    "name": "Ria",
+                    "from": 2003,
+                    "to": 2010
+                },
+                {
+                    "name": "Sutera",
+                    "from": 2006,
+                    "to": 2011
+                },
+                {
+                    "name": "Bestari",
+                    "from": 2006,
+                    "to": 2010
+                },
+                {
+                    "name": "Forza",
+                    "from": 2007,
+                    "to": 2011
+                }
+            ]
+        },
+        {
+            "name": "Neta",
+            "models": [
+                {
+                    "name": "Neta V",
+                    "from": 2023
+                }
+            ]
+        },
+        {
+            "name": "Nissan",
+            "models": [
+                {
+                    "name": "Almera",
+                    "from": 2012
+                },
+                {
+                    "name": "Sylphy",
+                    "from": 2006
+                },
+                {
+                    "name": "Teana",
+                    "from": 2004
+                },
+                {
+                    "name": "X-Trail",
+                    "from": 2001
+                },
+                {
+                    "name": "Serena",
+                    "from": 2005
+                },
+                {
+                    "name": "Navara",
+                    "from": 2005
+                },
+                {
+                    "name": "Grand Livina",
+                    "from": 2007,
+                    "to": 2019
+                },
+                {
+                    "name": "Livina",
+                    "from": 2007,
+                    "to": 2019
+                },
+                {
+                    "name": "Note",
+                    "from": 2006,
+                    "to": 2021
+                },
+                {
+                    "name": "Latio",
+                    "from": 2005,
+                    "to": 2012
+                },
+                {
+                    "name": "Juke",
+                    "from": 2011,
+                    "to": 2019
+                }
+            ]
+        },
+        {
+            "name": "Peugeot",
+            "models": [
+                {
+                    "name": "208",
+                    "from": 2013
+                },
+                {
+                    "name": "2008",
+                    "from": 2014
+                },
+                {
+                    "name": "308",
+                    "from": 2008
+                },
+                {
+                    "name": "3008",
+                    "from": 2010
+                },
+                {
+                    "name": "5008",
+                    "from": 2011
+                },
+                {
+                    "name": "508",
+                    "from": 2012
+                },
+                {
+                    "name": "408",
+                    "from": 2012,
+                    "to": 2018
+                }
+            ]
+        },
+        {
+            "name": "Porsche",
+            "models": [
+                {
+                    "name": "911",
+                    "from": 1975
+                },
+                {
+                    "name": "Cayenne",
+                    "from": 2003
+                },
+                {
+                    "name": "Macan",
+                    "from": 2014
+                },
+                {
+                    "name": "Panamera",
+                    "from": 2010
+                },
+                {
+                    "name": "Taycan",
+                    "from": 2020
+                },
+                {
+                    "name": "Boxster",
+                    "from": 1997
+                },
+                {
+                    "name": "Cayman",
+                    "from": 2006
+                }
+            ]
+        },
+        {
+            "name": "Renault",
+            "models": [
+                {
+                    "name": "Captur",
+                    "from": 2014
+                },
+                {
+                    "name": "Koleos",
+                    "from": 2008
+                },
+                {
+                    "name": "Megane",
+                    "from": 2000
+                },
+                {
+                    "name": "Fluence",
+                    "from": 2011,
+                    "to": 2016
+                },
+                {
+                    "name": "Zoe",
+                    "from": 2016,
+                    "to": 2021
+                }
+            ]
+        },
+        {
+            "name": "Skoda",
+            "models": [
+                {
+                    "name": "Octavia",
+                    "from": 2004
+                },
+                {
+                    "name": "Superb",
+                    "from": 2004
+                },
+                {
+                    "name": "Kodiaq",
+                    "from": 2017
+                },
+                {
+                    "name": "Karoq",
+                    "from": 2018
+                },
+                {
+                    "name": "Rapid",
+                    "from": 2013,
+                    "to": 2019
+                }
+            ]
+        },
+        {
+            "name": "Smart",
+            "models": [
+                {
+                    "name": "#1",
+                    "from": 2023
+                },
+                {
+                    "name": "#3",
+                    "from": 2024
+                }
+            ]
+        },
+        {
+            "name": "Ssangyong",
+            "models": [
+                {
+                    "name": "Rexton",
+                    "from": 2004
+                },
+                {
+                    "name": "Korando",
+                    "from": 2011
+                },
+                {
+                    "name": "Tivoli",
+                    "from": 2015
+                },
+                {
+                    "name": "Actyon",
+                    "from": 2006,
+                    "to": 2013
+                }
+            ]
+        },
+        {
+            "name": "Subaru",
+            "models": [
+                {
+                    "name": "Forester",
+                    "from": 2002
+                },
+                {
+                    "name": "XV",
+                    "from": 2012
+                },
+                {
+                    "name": "Impreza",
+                    "from": 1995
+                },
+                {
+                    "name": "Outback",
+                    "from": 2004
+                },
+                {
+                    "name": "BRZ",
+                    "from": 2012
+                },
+                {
+                    "name": "WRX",
+                    "from": 2014
+                },
+                {
+                    "name": "Levorg",
+                    "from": 2016,
+                    "to": 2021
+                }
+            ]
+        },
+        {
+            "name": "Suzuki",
+            "models": [
+                {
+                    "name": "Swift",
+                    "from": 2005
+                },
+                {
+                    "name": "Jimny",
+                    "from": 2019
+                },
+                {
+                    "name": "Vitara",
+                    "from": 2015
+                },
+                {
+                    "name": "SX4",
+                    "from": 2007,
+                    "to": 2014
+                },
+                {
+                    "name": "Alto",
+                    "from": 2010,
+                    "to": 2014
+                },
+                {
+                    "name": "Grand Vitara",
+                    "from": 2006,
+                    "to": 2016
+                }
+            ]
+        },
+        {
+            "name": "Tesla",
+            "models": [
+                {
+                    "name": "Model 3",
+                    "from": 2023
+                },
+                {
+                    "name": "Model Y",
+                    "from": 2023
+                },
+                {
+                    "name": "Model S",
+                    "from": 2023
+                },
+                {
+                    "name": "Model X",
+                    "from": 2023
+                }
+            ]
+        },
+        {
+            "name": "Toyota",
+            "models": [
+                {
+                    "name": "Vios",
+                    "from": 2003
+                },
+                {
+                    "name": "Yaris",
+                    "from": 2005
+                },
+                {
+                    "name": "Corolla Altis",
+                    "from": 2001
+                },
+                {
+                    "name": "Corolla Cross",
+                    "from": 2020
+                },
+                {
+                    "name": "Camry",
+                    "from": 1990
+                },
+                {
+                    "name": "Hilux",
+                    "from": 2005
+                },
+                {
+                    "name": "Fortuner",
+                    "from": 2005
+                },
+                {
+                    "name": "Innova",
+                    "from": 2005
+                },
+                {
+                    "name": "Avanza",
+                    "from": 2004
+                },
+                {
+                    "name": "Veloz",
+                    "from": 2022
+                },
+                {
+                    "name": "Rush",
+                    "from": 2018
+                },
+                {
+                    "name": "RAV4",
+                    "from": 2013
+                },
+                {
+                    "name": "C-HR",
+                    "from": 2017
+                },
+                {
+                    "name": "Harrier",
+                    "from": 2013
+                },
+                {
+                    "name": "Alphard",
+                    "from": 2002
+                },
+                {
+                    "name": "Vellfire",
+                    "from": 2008
+                },
+                {
+                    "name": "Hiace",
+                    "from": 1990
+                },
+                {
+                    "name": "Prius",
+                    "from": 2009
+                },
+                {
+                    "name": "Estima",
+                    "from": 1990,
+                    "to": 2019
+                }
+            ]
+        },
+        {
+            "name": "Volkswagen",
+            "models": [
+                {
+                    "name": "Polo",
+                    "from": 2010
+                },
+                {
+                    "name": "Golf",
+                    "from": 2010
+                },
+                {
+                    "name": "Passat",
+                    "from": 2005
+                },
+                {
+                    "name": "Tiguan",
+                    "from": 2012
+                },
+                {
+                    "name": "Arteon",
+                    "from": 2020
+                },
+                {
+                    "name": "T-Cross",
+                    "from": 2021
+                },
+                {
+                    "name": "T-Roc",
+                    "from": 2021
+                },
+                {
+                    "name": "ID.4",
+                    "from": 2024
+                },
+                {
+                    "name": "Jetta",
+                    "from": 2011,
+                    "to": 2019
+                },
+                {
+                    "name": "Vento",
+                    "from": 2014,
+                    "to": 2020
+                },
+                {
+                    "name": "Touareg",
+                    "from": 2005,
+                    "to": 2019
+                },
+                {
+                    "name": "Beetle",
+                    "from": 2013,
+                    "to": 2019
+                }
+            ]
+        },
+        {
+            "name": "Volvo",
+            "models": [
+                {
+                    "name": "S60",
+                    "from": 2001
+                },
+                {
+                    "name": "S90",
+                    "from": 2017
+                },
+                {
+                    "name": "V60",
+                    "from": 2011
+                },
+                {
+                    "name": "XC40",
+                    "from": 2018
+                },
+                {
+                    "name": "XC60",
+                    "from": 2009
+                },
+                {
+                    "name": "XC90",
+                    "from": 2003
+                },
+                {
+                    "name": "C40",
+                    "from": 2022
+                },
+                {
+                    "name": "EX30",
+                    "from": 2024
+                },
+                {
+                    "name": "V40",
+                    "from": 2013,
+                    "to": 2019
+                }
+            ]
+        }
+    ]
+}

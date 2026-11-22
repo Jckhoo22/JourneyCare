@@ -1,0 +1,40 @@
+/**
+ * Google sign-in. [A1, A5]
+ *
+ * Same 48px height and radius as .btn-primary directly above it — these two
+ * used to differ by a few pixels in height and by their font size, which read
+ * as a misalignment rather than a hierarchy.
+ */
+
+.google-btn {
+    width: 100%;
+    min-height: var(--control-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-button);
+    padding: 0 var(--space-5);
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-body);
+    cursor: pointer;
+    transition: border-color 0.15s, background-color 0.15s;
+    margin-top: var(--space-3);
+}
+.google-btn:hover:not(:disabled) {
+    background-color: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+}
+.google-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.google-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+}

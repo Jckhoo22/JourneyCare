@@ -1,0 +1,110 @@
+/**
+ * Modal confirm dialog. [Car polish]
+ *
+ * Portaled to <body>, so nothing in the page flow needs to make room — this
+ * stylesheet controls the whole surface. The card is neutral; the confirm
+ * button is the only red thing on screen.
+ */
+
+.confirm-modal-overlay {
+    position: fixed;
+    inset: 0;
+    /* Above the sticky bottom bar (z-index 20) and the top bar (z-index 10);
+       below the toast layer (9999) so a success toast on close still lands
+       on top. */
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Room on 375px screens so the card never touches the viewport edge. */
+    padding: var(--space-4);
+    padding-bottom: max(var(--space-4), var(--safe-bottom));
+    background-color: rgba(15, 15, 15, 0.42);
+    animation: confirm-modal-fade 0.12s ease-out;
+}
+
+.confirm-modal-card {
+    width: 100%;
+    max-width: 400px;
+    padding: var(--space-5);
+    background-color: var(--color-surface);
+    /* Normal hairline border — the destructive signal lives in the button,
+       not the container. */
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-toast);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    /* The card is programmatically focused on open; hide the ring so a
+       mouse user doesn't see a stray outline they didn't ask for. */
+    outline: none;
+    animation: confirm-modal-rise 0.14s ease-out;
+}
+
+.confirm-modal-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-title);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    line-height: var(--leading-tight);
+}
+
+/* Body copy — inherits margin: 0 for any <p> the caller passes, so the card's
+   own gap does the vertical rhythm. */
+.confirm-modal-body {
+    margin: 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-loose);
+    color: var(--color-text-body);
+}
+.confirm-modal-body p {
+    margin: 0;
+}
+.confirm-modal-body p + p {
+    margin-top: var(--space-2);
+}
+
+/* Actions: stacked on phones, right-aligned on ≥600px screens with Cancel
+   on the left of the confirm — desktop convention. On phones the destructive
+   button sits above cancel so the thumb hits the primary answer first. */
+.confirm-modal-actions {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+@media (min-width: 600px) {
+    .confirm-modal-actions {
+        flex-direction: row;
+        justify-content: flex-end;
+        align-items: center;
+        gap: var(--space-3);
+    }
+}
+
+@keyframes confirm-modal-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes confirm-modal-rise {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Users who ask for reduced motion get an instant swap, no rise. */
+@media (prefers-reduced-motion: reduce) {
+    .confirm-modal-overlay,
+    .confirm-modal-card {
+        animation: none;
+    }
+}

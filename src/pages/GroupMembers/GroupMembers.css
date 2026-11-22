@@ -1,0 +1,91 @@
+/**
+ * Members screen. [G9, G10, G11, Members redesign]
+ *
+ * Page shell and buttons come from styles/app-shell.css. What's here is the
+ * header and the danger zone.
+ *
+ * ── History ────────────────────────────────────────────────────────────────
+ * The header used to render the group name twice: once in the back link and
+ * once as a subtitle under "Members". The subtitle went in the Members
+ * redesign — the back link is the parent-name signal and the h1 is the
+ * page. In its place the member count moved inline with the title.
+ */
+
+.members-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+/* Inline muted count on the page title — "Members · 2".
+   Body scale + normal weight + the faintest AA-legal grey: the count reads
+   as an annotation next to the title, not as a second headline. `vertical-align:
+   baseline` explicit so a future re-scale of the h1 can't accidentally flip
+   the count to `middle` (which would put it visually mid-cap-height). The
+   dot lives in its own span so the horizontal margin is a real pixel value
+   the eye reads as separation, not a JSX text-node space in the narrow
+   sans-serif width. */
+.members-count,
+.members-count-dot {
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    font-weight: var(--weight-normal);
+    color: var(--color-text-faint);
+    letter-spacing: normal;
+    vertical-align: baseline;
+}
+
+.members-count-dot {
+    margin: 0 var(--space-2);
+}
+
+/* ── Danger zone ────────────────────────────────────────────────────────── */
+.group-danger {
+    margin-top: var(--space-2);
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    /* Neutral hairline like every other card — the red is spent on the label
+       and the button, where it carries meaning, rather than on a box outline
+       that shouts before you've read anything. */
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+/* Sentence case — "Delete group", not "DELETE GROUP". Normal weight red-700
+   in the redesign: the section title sits as a section, not a warning shape;
+   the red on the label + the button carries the meaning. */
+.group-danger-title {
+    margin: 0 0 var(--space-1) 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-error-text);
+}
+
+.group-danger-body {
+    margin: 0 0 var(--space-3) 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+.group-danger-prompt {
+    color: var(--color-text-body);
+    font-weight: var(--weight-medium);
+}
+
+/* Stacked on a phone so the destructive button is full-width and Cancel is
+   clearly separate from it — never side by side under a thumb. */
+.group-danger-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+}
+
+@media (min-width: 600px) {
+    .group-danger-actions {
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-4);
+    }
+}

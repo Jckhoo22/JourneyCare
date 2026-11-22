@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    /* src/data/*.json is bundled static data — car brands and maintenance
+       presets. Vite inlines these at build time; no network, no API. [C2, L3] */
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Strictness */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+
+    /* "node" is here for the Firestore rules tests, which read firestore.rules
+       off disk; app code should stick to browser APIs. */
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts", "vitest.rules.config.ts", "eslint.config.js"]
+}

@@ -1,0 +1,66 @@
+/**
+ * Joiner's entry point [G4, platform-adaptive polish, dressing pass].
+ *
+ * Shell chrome (card, blobs, icon-header, title/subtitle, and the column-
+ * rule back-link slot above the card) comes from CardShell. This file only
+ * styles what's inside the card, plus the small phone-only affordances
+ * (Have-a-link disclosure, expanded paste form, on-phone tip, scan loader).
+ *
+ * Previously carried its own `.join-container` / `.join-page-back` /
+ * `.join-card` chrome with the back link absolutely positioned in the
+ * viewport corner. That's now the CardShell column pattern — the back link
+ * left-aligns to the card's edge instead of orphaning at the screen edge.
+ * Sentence-case field labels are handled by CardShell's `.card-shell-content
+ * .input-label` scope, so this file no longer needs a `.join-form
+ * .input-label` override.
+ */
+
+/* Quiet text link under the Scan CTA on the phone variant — "Have a link
+   instead?". Center-aligned, tap-target already provided by app-btn-quiet. */
+.join-have-link {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-3);
+}
+
+/* Override the muted subtle colour from app-btn-quiet so this reads as a
+   tappable link, not incidental text. Same accent as .back-link. */
+.join-have-link-btn {
+    color: var(--color-primary) !important;
+}
+.join-have-link-btn:hover:not(:disabled) {
+    color: var(--color-primary-active) !important;
+}
+
+/* Expanded paste form on the phone variant — sits below Scan (now demoted
+   to outline). Small top margin so the primary/secondary pair doesn't jam
+   against the form label. */
+.join-paste-body {
+    display: flex;
+    flex-direction: column;
+    margin-top: var(--space-4);
+}
+
+/* Desktop-only support line under the Continue button. `text-wrap: balance`
+   distributes the words across lines evenly so a single word never orphans
+   onto its own line; a max-width caps the measure regardless of engine
+   support. 13–14px, subdued. */
+.join-onphone-tip {
+    margin: var(--space-3) auto 0 auto;
+    max-width: 32ch;
+    font-size: var(--text-sm);
+    line-height: var(--leading-loose);
+    text-align: center;
+    text-wrap: balance;
+    color: var(--color-text-subtle);
+}
+
+/* Suspense fallback while the QrScanner chunk loads. Centred so it doesn't
+   read as broken layout — a phone waiting for a scanner needs a beat of
+   feedback. */
+.join-scan-loading {
+    margin: 0 0 var(--space-3) 0;
+    font-size: var(--text-sm);
+    text-align: center;
+    color: var(--color-text-subtle);
+}

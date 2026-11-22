@@ -1,0 +1,70 @@
+.home-overview {
+    display: grid;
+    align-items: center;
+    gap: var(--space-5);
+}
+
+.home-summary {
+    min-width: 0;
+}
+
+.home-summary:empty {
+    display: none;
+}
+
+.home-section {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.home-section-title {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-display);
+    font-size: var(--text-title);
+    font-weight: var(--weight-bold);
+}
+
+.home-group-list,
+.home-car-list {
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+}
+
+.home-car-list > .car-card {
+    min-width: 0;
+}
+
+.home-group-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.home-group-actions > .app-btn {
+    flex: 1 1 8rem;
+    width: auto;
+}
+
+.home-group-actions .home-group-actions-create {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+@media (min-width: 760px) {
+    .home-overview:has(.home-summary:not(:empty)) {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .home-group-actions > .app-btn {
+        flex: 0 1 auto;
+    }
+}
+
+@media (max-width: 420px) {
+    .home-summary .summary-spend-single {
+        flex-wrap: wrap;
+        row-gap: var(--space-1);
+    }
+}

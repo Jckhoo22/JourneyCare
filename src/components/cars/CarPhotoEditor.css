@@ -1,0 +1,191 @@
+/**
+ * Photo section on the Edit car screen. [Car polish, Photo redesign]
+ *
+ * The image IS the section. A 16:9 rounded container with a hairline border
+ * carries whichever state the car is in (photo or illustration placeholder);
+ * actions live ON the image as overlay pills anchored bottom-right.
+ *
+ * Two states share the same container so the layout never shifts when the
+ * photo changes:
+ *
+ *   • photo    → `object-fit: cover`, `object-position: center 60%`
+ *   • no photo → the lucide car mark on --color-surface-muted, sized at
+ *                ~60% of the container width so it reads as a deliberate
+ *                placeholder rather than a stretched graphic
+ *
+ * `imageUrl` intentionally has no state here — the CarImages API was
+ * stripped in the CarImages gate; the precedence is `photo ?? placeholder`.
+ * See `CarPhotoEditor.tsx` and `specs/CONTEXT.md § the CarImages gate`.
+ */
+
+.car-photo-editor {
+    /* No outer card border — the media container IS the card. Keeps the
+       section a single visual surface rather than a card holding a card. */
+    display: block;
+    position: relative;
+}
+
+/* ── The 16:9 image container ─────────────────────────────────────────────
+   Card-like treatment (hairline border + card radius) matching the other
+   panels on the page. `overflow: hidden` clips the img so its rounded
+   corners follow the container. */
+.car-photo-editor-media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    transition: opacity 0.15s;
+}
+
+/* Placeholder state — muted gray surface so the illustration reads as
+   deliberate rather than stretched, and the container still feels lifted
+   from the page even without a photo. */
+.car-photo-editor-media-empty {
+    background-color: var(--color-surface-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.car-photo-editor-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* 60% lands the frame roughly on the body of the car rather than the
+       sky above it — matches `.car-photo-image` on the car detail page. */
+    object-position: center 60%;
+    display: block;
+    transition: opacity 0.15s;
+}
+
+/* Icon-as-illustration. Width set on the SVG rather than on a wrapper so
+   the height follows automatically from the icon's own aspect. ~60% of the
+   container width, capped so a very wide desktop card doesn't grow the
+   placeholder past a comfortable read. */
+.car-photo-editor-illustration {
+    width: 60%;
+    max-width: 200px;
+    height: auto;
+    color: var(--color-primary);
+    opacity: 0.7;
+}
+
+/* Working: dim the visual so the eye reads the pill's spinner as the
+   locus of activity, and the picture as inactive underneath. */
+.car-photo-editor-busy .car-photo-editor-image,
+.car-photo-editor-busy .car-photo-editor-illustration {
+    opacity: 0.6;
+}
+
+/* The real input is driven by the pill above; hiding with `display: none`
+   would take it out of the accessibility tree, so it's clipped instead. */
+.car-photo-editor-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ── Overlay pills ──────────────────────────────────────────────────────
+   Anchored bottom-right at an 8px inset. Small gap between pills so the
+   destructive Remove doesn't butt against the primary Change target. */
+.car-photo-editor-overlay {
+    position: absolute;
+    bottom: var(--space-2);
+    right: var(--space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* Compact pill. `min-height: --tap-min` (44px) so a phone tap never falls
+   below the touch target even when the visual reads as small; the visual
+   height still lands around 36–40px because the text sits mid-pill.
+   Backdrop-blur softens whatever's underneath the pill so the label stays
+   readable across a range of car photos.
+
+   Fallback for browsers without backdrop-filter: the bg alpha is 0.92,
+   which stays legible on its own. */
+.car-photo-editor-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--tap-min);
+    padding: 0 var(--space-3);
+    background-color: rgb(255 255 255 / 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgb(255 255 255 / 0.6);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-raised);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    cursor: pointer;
+    transition:
+        background-color 0.15s,
+        transform 0.05s;
+    line-height: 1;
+    /* Cap the primary pill so it can't grow to eat the image on a wide
+       desktop card; the label + icon is always short. */
+    white-space: nowrap;
+}
+
+.car-photo-editor-pill:hover:not(:disabled) {
+    background-color: rgb(255 255 255 / 1);
+}
+.car-photo-editor-pill:active:not(:disabled) {
+    transform: translateY(1px);
+}
+.car-photo-editor-pill:disabled {
+    cursor: not-allowed;
+    opacity: 0.85;
+}
+.car-photo-editor-pill:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Remove pill — icon-only, square. Red icon on the same white pill body,
+   so the destructive action reads as a peer of the primary pill (same
+   surface, same shape) rather than as a foreign flash of red. */
+.car-photo-editor-pill-remove {
+    width: var(--tap-min);
+    padding: 0;
+    color: var(--color-error);
+}
+.car-photo-editor-pill-remove:hover:not(:disabled) {
+    color: var(--color-error-text);
+}
+
+/* Spinner — swaps in for the camera icon while a save is in flight. */
+.car-photo-editor-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--color-border-strong);
+    border-top-color: var(--color-text);
+    border-radius: 50%;
+    animation: car-photo-editor-spin 0.8s linear infinite;
+}
+
+@keyframes car-photo-editor-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .car-photo-editor-spinner {
+        animation: none;
+    }
+}

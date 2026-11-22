@@ -1,0 +1,34 @@
+/**
+ * Dropdown chrome. Reuses AuthTextField's .input-group / .input-wrapper /
+ * .form-control so a select and a text field are the same height, radius and
+ * type — which is the whole point of the one-control-height token.
+ */
+
+@import "../login_register/AuthTextField.css";
+
+.select-control {
+    /* Strip the platform's own arrow; .select-chevron draws ours. */
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: none;
+    cursor: pointer;
+}
+
+/* An unchosen select shows its disabled placeholder option, which should read
+   as placeholder text rather than as a value. */
+.select-control:invalid,
+.select-control option[value=""] {
+    color: var(--color-text-faint);
+}
+
+/* Purely decorative — taps must fall through to the select underneath. */
+.select-chevron {
+    pointer-events: none;
+    color: var(--color-text-subtle);
+}
+
+/* A select with nothing to offer (no model chosen yet, so no year list) reads
+   as inert rather than broken. */
+.select-control:disabled {
+    cursor: not-allowed;
+}

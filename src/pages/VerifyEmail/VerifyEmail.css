@@ -1,0 +1,74 @@
+/**
+ * Verify-email gate. [A4]
+ *
+ * Page shell, card and primary button come from styles/auth-shell.css — this
+ * is only what's unique to the gate.
+ */
+
+.verify-email-target {
+    margin: var(--space-2) 0 0 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    /* An address is one long unbreakable token on a narrow screen. */
+    overflow-wrap: anywhere;
+}
+
+.verify-hint {
+    margin: 0 0 var(--space-5) 0;
+    text-align: center;
+    font-size: var(--text-sm);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+/* Secondary action — mirrors GoogleButton's outlined treatment and height. */
+.verify-resend-btn {
+    width: 100%;
+    min-height: var(--control-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-button);
+    padding: 0 var(--space-5);
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-body);
+    cursor: pointer;
+    transition: border-color 0.15s, background-color 0.15s;
+    margin-top: var(--space-3);
+}
+.verify-resend-btn:hover:not(:disabled) {
+    background-color: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+}
+.verify-resend-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.verify-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-4);
+}
+
+.verify-signout-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap-min);
+    padding: 0 var(--space-2);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-subtle);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+.verify-signout-link:hover {
+    color: var(--color-text);
+}

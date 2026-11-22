@@ -1,0 +1,160 @@
+/**
+ * AmbientBackground — Home only.
+ *
+ * A fixed layer of three drifting radial tints that sits above the page's
+ * base wash and below the main column. All three properties named in the
+ * spec are respected: transforms and opacity animate (compositor-only), the
+ * blob edges are pre-blurred by the gradient stops (no CSS filter:blur on a
+ * moving layer — that would re-rasterise a huge box every frame on mobile),
+ * and durations are staggered so the loop's phase never visibly repeats.
+ *
+ * ── Layering ───────────────────────────────────────────────────────────────
+ * .app-page                       (opaque #faf9f6 — the paper)
+ *   .blob-top / .blob-bottom      (z:0, static, filter-blurred wash)
+ *   .ambient-bg                   (z:1, THIS layer — animated tint)
+ *   .app-main                     (z:10, opaque cards + text sit above)
+ *
+ * Cards use --color-surface (#fff, opaque), so the ambient tint never bleeds
+ * through them. Text that lands directly on the page bg (greeting h1, section
+ * eyebrows) reads on a tint of 5–8% alpha over near-white — the contrast pair
+ * is unchanged from the resting page.
+ */
+
+.ambient-bg {
+    position: fixed;
+    inset: 0;
+    /* Above the two static wash blobs (which are at z:0 inside .app-page) and
+       below .app-main (z:10). .app-main creates a stacking context, so every
+       card and text node inside it paints strictly above this layer. */
+    z-index: 1;
+    pointer-events: none;
+    /* Clips any blob that translates past the viewport edge. `hidden`, not
+       `clip`, because this layer is itself fixed at viewport size and never
+       becomes a scroll container regardless. */
+    overflow: hidden;
+}
+
+.ambient-blob {
+    position: absolute;
+    border-radius: 50%;
+    /* Layer promotion. Three blobs is a bounded memory cost and buys a
+       compositor-only animation — no repaint of the cards above. */
+    will-change: transform, opacity;
+}
+
+/* ── Blob A ─ top-left, teal ─────────────────────────────────────────────
+   Pre-blurred: the gradient fades to fully transparent at 70%, so the disc
+   has no visible edge and needs no filter:blur on the element. */
+.ambient-blob-a {
+    top: -12vw;
+    left: -8vw;
+    width: 45vw;
+    height: 45vw;
+    background: radial-gradient(
+        circle at center,
+        rgba(15, 118, 110, 0.08) 0%,
+        rgba(15, 118, 110, 0.04) 40%,
+        rgba(15, 118, 110, 0) 72%
+    );
+    animation: ambient-drift-a 37s ease-in-out infinite alternate;
+}
+
+/* ── Blob B ─ bottom-right, warm sand (matches --color-wash-2) ──────────── */
+.ambient-blob-b {
+    bottom: -14vw;
+    right: -10vw;
+    width: 50vw;
+    height: 50vw;
+    background: radial-gradient(
+        circle at center,
+        rgba(217, 180, 120, 0.07) 0%,
+        rgba(217, 180, 120, 0.035) 40%,
+        rgba(217, 180, 120, 0) 72%
+    );
+    animation: ambient-drift-b 43s ease-in-out infinite alternate;
+}
+
+/* ── Blob C ─ mid-right, teal ─ smaller and lower alpha ─────────────────── */
+.ambient-blob-c {
+    /* `%` (not vh/dvh) — `.ambient-bg` is fixed at viewport size so 32% is a
+       third down the visible viewport on iOS as well as everywhere else,
+       without having to pair vh with a dvh fallback. */
+    top: 32%;
+    right: 12vw;
+    width: 35vw;
+    height: 35vw;
+    background: radial-gradient(
+        circle at center,
+        rgba(15, 118, 110, 0.05) 0%,
+        rgba(15, 118, 110, 0.025) 40%,
+        rgba(15, 118, 110, 0) 72%
+    );
+    /* Two overlapping animations: a drift, and a slow breathe on opacity
+       whose period is coprime with the drift's so their sum never repeats
+       on a human-noticeable schedule. */
+    animation:
+        ambient-drift-c 29s ease-in-out infinite alternate,
+        ambient-breathe-c 33s ease-in-out infinite alternate;
+}
+
+/* ── Keyframes ─ transform / opacity only ────────────────────────────────
+   Max drift ~6–8vw per axis, scale kept close to 1 so the disc never
+   visibly changes size. These are the only animated properties on the
+   page; both are handled off the main thread. */
+@keyframes ambient-drift-a {
+    from {
+        transform: translate(0, 0) scale(1);
+    }
+    to {
+        transform: translate(6vw, 4vw) scale(1.05);
+    }
+}
+
+@keyframes ambient-drift-b {
+    from {
+        transform: translate(0, 0) scale(1);
+    }
+    to {
+        transform: translate(-5vw, -4vw) scale(1.03);
+    }
+}
+
+@keyframes ambient-drift-c {
+    from {
+        transform: translate(0, 0) scale(1);
+    }
+    to {
+        transform: translate(-4vw, 5vw) scale(1.06);
+    }
+}
+
+@keyframes ambient-breathe-c {
+    from {
+        opacity: 0.7;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────────
+   Kill the animations and rest each blob at a translated / scaled position
+   that reads as "already settled" rather than a stiff initial state — a
+   static gradient composition, exactly as the spec asks. */
+@media (prefers-reduced-motion: reduce) {
+    .ambient-blob-a,
+    .ambient-blob-b,
+    .ambient-blob-c {
+        animation: none;
+    }
+    .ambient-blob-a {
+        transform: translate(3vw, 2vw) scale(1.02);
+    }
+    .ambient-blob-b {
+        transform: translate(-2.5vw, -2vw) scale(1.015);
+    }
+    .ambient-blob-c {
+        transform: translate(-2vw, 2.5vw) scale(1.03);
+        opacity: 0.85;
+    }
+}

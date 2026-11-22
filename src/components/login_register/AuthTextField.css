@@ -1,0 +1,141 @@
+/**
+ * Labelled text input with a leading icon and an optional password toggle.
+ *
+ * Two things the refresh fixed:
+ *   • the input was 14px, which makes iOS Safari zoom the page on focus and
+ *     never zoom back out. It's 16px now (enforced globally in index.css too).
+ *   • the show/hide password toggle was an unpadded 18px icon — a ~20px tap
+ *     target sitting inside a field people are typing in. It's 44px now.
+ */
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.input-label {
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-text-subtle);
+    text-transform: uppercase;
+}
+
+.input-wrapper {
+    position: relative;
+    width: 100%;
+    border-radius: var(--radius-field);
+}
+
+/* ── Icons ──────────────────────────────────────────────────────────────── */
+.input-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+    pointer-events: none;
+}
+
+.input-icon.left {
+    left: var(--space-4);
+}
+
+/* The password toggle: a real 44px button pinned to the right edge. */
+.input-icon.right {
+    right: 0;
+    width: var(--tap-min);
+    height: var(--tap-min);
+    pointer-events: auto;
+}
+
+.input-wrapper.error .input-icon {
+    color: var(--color-error);
+}
+
+.input-wrapper:focus-within .input-icon.left {
+    color: var(--color-primary);
+}
+.input-wrapper.error:focus-within .input-icon.left {
+    color: var(--color-error);
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--color-text-faint);
+}
+.toggle-btn:hover {
+    color: var(--color-text-muted);
+}
+
+/* ── The field ──────────────────────────────────────────────────────────────
+   Right padding always leaves room for the toggle, whether or not this field
+   has one — a consistent inset beats a field that shifts when the type
+   changes. Left padding assumes a leading icon; the no-icon variant drops it
+   back to the normal text gutter so the caret sits under the placeholder. */
+.form-control {
+    width: 100%;
+    min-height: var(--control-height);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-field);
+    padding: var(--space-3) var(--tap-min) var(--space-3) var(--space-10);
+    font-size: var(--text-body);
+    font-weight: var(--weight-normal);
+    color: var(--color-text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+/* Icon-less fields — CardShell screens, Settings' name field. Left padding
+   is the normal text gutter, not the icon inset. */
+.input-wrapper.no-icon .form-control {
+    padding-left: var(--space-4);
+}
+
+.form-control::placeholder {
+    color: var(--color-text-faint);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+
+.input-wrapper.error .form-control {
+    border-color: var(--color-error);
+}
+
+.form-control:disabled {
+    background-color: var(--color-surface-muted);
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* ── Error text ─────────────────────────────────────────────────────────── */
+.field-error-text {
+    color: var(--color-error-text);
+    font-size: var(--text-xs);
+    display: block;
+    text-align: left;
+    animation: fieldErrorFadeIn 0.2s ease-in-out;
+}
+
+@keyframes fieldErrorFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

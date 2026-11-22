@@ -1,0 +1,155 @@
+/**
+ * Log a service [L1–L5]. Card chrome from styles/auth-shell.css.
+ *
+ * This is the app's most-used screen, so the fast path is the whole design:
+ * type, cost, date — everything else is prefilled or optional, and the date is
+ * already today.
+ */
+
+.add-log-hint {
+    margin: calc(var(--space-2) * -1) 0 var(--space-4) 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+/*  Form-purpose subtitle sits between the h1 and the car-name subtitle.
+    Muted, single line, ~text-sm — same weight class as .subtitle so the
+    header stays a coherent stack, but softer than the car name (which
+    should still be the visual anchor identifying the target car). */
+.log-form-purpose {
+    margin: calc(var(--space-1) * -1) 0 var(--space-1);
+    font-size: var(--text-sm);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+    text-align: center;
+}
+
+.add-log-error {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--color-error-text);
+}
+
+/* ── Date ───────────────────────────────────────────────────────────────────
+   Not an AuthTextField: `type="date"` needs the native picker, and iOS renders
+   its own control inside the field, so the usual left-icon padding would
+   collide with it. */
+.add-log-date {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.add-log-date-label {
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-subtle);
+}
+
+.add-log-date-wrap {
+    position: relative;
+}
+
+.add-log-date-icon {
+    position: absolute;
+    top: 50%;
+    left: var(--space-4);
+    transform: translateY(-50%);
+    color: var(--color-text-faint);
+    pointer-events: none;
+}
+
+.add-log-date-input {
+    width: 100%;
+    min-height: var(--control-height);
+    padding: 0 var(--space-3) 0 var(--space-10);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-field);
+    color: var(--color-text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.add-log-date-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+.add-log-date-input[aria-invalid="true"] {
+    border-color: var(--color-error);
+}
+
+/* Safari on iOS shrinks a date input to its content and aligns it oddly;
+   these two put it back in line with every other field. */
+.add-log-date-input::-webkit-date-and-time-value {
+    text-align: left;
+    min-height: 1.5rem;
+}
+
+/* ── The odometer-bump offer ────────────────────────────────────────────────
+   A real checkbox with the whole row as the label, so the tap target is the
+   sentence rather than the 16px box. */
+.add-log-check {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    min-height: var(--tap-min);
+    margin: calc(var(--space-2) * -1) 0 var(--space-4) 0;
+    padding: var(--space-3);
+    background-color: var(--color-primary-soft);
+    border-radius: var(--radius-field);
+    font-size: var(--text-xs);
+    line-height: var(--leading-loose);
+    color: var(--color-text-body);
+    cursor: pointer;
+}
+
+.add-log-check input {
+    flex-shrink: 0;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-top: 0.125rem;
+    accent-color: var(--color-primary);
+}
+
+/* ── More options disclosure [UX 2c, R8] ──────────────────────────────────
+   Collapsed by default so Auntie sees four fields, not nine. The presets
+   from maintenance-types.json carry the interval defaults without her ever
+   needing to open this.
+   The toggle sits full-width so it reads as a real control, not a text
+   link tucked between fields. */
+.add-log-more-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: var(--tap-min);
+    margin-bottom: var(--space-4);
+    padding: 0 var(--space-3);
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-field);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-primary);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+.add-log-more-toggle:hover {
+    border-color: var(--color-border-strong);
+    color: var(--color-primary-active);
+}
+
+.add-log-more-chevron-open {
+    transform: rotate(180deg);
+}
+
+.add-log-more {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: var(--space-4);
+}

@@ -1,0 +1,60 @@
+/* Shared car form fields [C2, C3, C8]. Wrapper class `.car-fields` scopes
+   the sentence-case labels + no-icon insets so the auth screens' voice
+   (all-caps eyebrow, leading icon inside the field) stays untouched. */
+
+.car-fields {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Labels ────────────────────────────────────────────────────────────────
+   Sentence case, matching Settings. Font size + weight + color match the
+   Settings screen's `.settings-field-label` so a car-form label and a settings
+   label read as siblings. */
+.car-fields .input-label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--color-text-body);
+}
+
+/* ── No-icon insets ────────────────────────────────────────────────────────
+   AuthTextField/SelectField/ComboField reserve left padding for a leading
+   icon by default (`.form-control` uses `--space-10`). Without an icon that
+   inset reads as an accidental left margin. Drop it back to the normal text
+   gutter, mirroring `.input-wrapper.no-icon` in AuthTextField.css. */
+.car-fields .form-control {
+    padding-left: var(--space-4);
+}
+
+.car-fields-hint {
+    margin: calc(var(--space-3) * -1) 0 var(--space-4) 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+/* Divider between the three required pickers and everything that can wait. */
+.car-fields-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-5) 0 var(--space-4);
+}
+
+.car-fields-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--color-border);
+}
+
+/* Sentence case, weight-medium — reads as a section label, not a form eyebrow. */
+.car-fields-divider-label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--color-text-subtle);
+}

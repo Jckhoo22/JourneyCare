@@ -1,0 +1,15 @@
+{
+  "//": "Composite indexes. Firestore auto-indexes single fields; a query that combines an equality filter with an orderBy on a DIFFERENT field needs one declared. Deploy with: firebase deploy --only firestore:indexes",
+  "indexes": [
+    {
+      "//": "Recomputing car.lastByType[type] after a log is edited or deleted. Bounded to the latest few entries of one type — see recomputeLastService in LogsController. [T12, S1]",
+      "collectionGroup": "logs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

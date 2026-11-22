@@ -1,0 +1,141 @@
+/**
+ * A switch driven by a real, visually-hidden checkbox.
+ *
+ * The whole label is the tap target, which makes it the full row rather than
+ * the 40px switch — the difference between comfortable and fiddly on a phone.
+ */
+
+.toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--tap-min);
+    cursor: pointer;
+}
+.toggle-disabled {
+    cursor: default;
+}
+
+/* Compact form, for grid cells: no visible label, so centre the switch in the
+   column instead of leaving it hanging left. */
+.toggle-compact {
+    justify-content: center;
+    gap: 0;
+}
+
+/* Settings-list convention: label pushed to the left, track pushed to the
+   right, whole row is the tap target. The DOM order (input → track → text)
+   stays; `flex-direction: row-reverse` flips the visual order so the label
+   comes first and the track anchors the right edge. `flex: 1` on the label
+   makes it eat the horizontal space so the track never floats mid-row. */
+.toggle-split {
+    flex-direction: row-reverse;
+    gap: var(--space-3);
+}
+.toggle-split .toggle-text {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}
+.toggle-split .toggle-hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+}
+
+/* Clipped rather than `display: none`, which would take it out of the
+   accessibility tree along with its keyboard behaviour. */
+.toggle-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.toggle-track {
+    position: relative;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 1.5rem;
+    background-color: var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    transition: background-color 0.15s;
+}
+
+.toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 1.125rem;
+    height: 1.125rem;
+    background-color: var(--color-surface);
+    border-radius: 50%;
+    transition: transform 0.15s;
+}
+
+.toggle-input:checked + .toggle-track {
+    background-color: var(--color-primary);
+}
+.toggle-input:checked + .toggle-track .toggle-thumb {
+    transform: translateX(1rem);
+}
+
+.toggle-input:disabled + .toggle-track {
+    opacity: 0.5;
+}
+
+/* Pending — a write triggered by this switch is round-tripping. Dims the
+   track (already dimmed by :disabled) and softly pulses the thumb so the
+   user sees the switch is in motion, not stuck. Applied by the parent by
+   passing `pending` alongside `disabled`. */
+.toggle-pending .toggle-thumb {
+    animation: toggle-thumb-pulse 1s ease-in-out infinite;
+}
+
+@keyframes toggle-thumb-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* Respect prefers-reduced-motion — a pulsing switch is decoration, and the
+   :disabled cursor + dimmed track already carry the pending signal. */
+@media (prefers-reduced-motion: reduce) {
+    .toggle-pending .toggle-thumb {
+        animation: none;
+    }
+}
+
+/* The hidden input can't show a ring, so focus lands on the track instead. */
+.toggle-input:focus-visible + .toggle-track {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.toggle-text {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+}
+
+.toggle-hint {
+    color: var(--color-text-faint);
+}
+
+/* Visible to screen readers only. */
+.toggle-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

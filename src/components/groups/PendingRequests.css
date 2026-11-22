@@ -1,0 +1,165 @@
+/**
+ * Owner-only pending-request list. [G6, G7, Manage polish]
+ *
+ * ── Two shapes ──────────────────────────────────────────────────────────
+ *   • zero pending → slim status line (.pending-clear), no card
+ *   • one+ pending → full card (.pending-panel) with header, teal count
+ *     badge, and one row per request
+ *
+ * Accept and Decline are consequential and adjacent, so on a phone they
+ * get a full row each at full width rather than sharing one — the old
+ * layout put two small buttons side by side at the end of a row, which
+ * is exactly where a mis-tap costs the most.
+ */
+
+/* Slim empty line. Same shape as WhatsDue's all-clear and GroupSpend's
+   RM 0 line on the group page. Borderless — a status line, not a panel. */
+.pending-clear {
+    margin: 0;
+    padding: var(--space-2) 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-subtle);
+}
+
+.pending-panel {
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.pending-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-3);
+}
+
+/* Sentence-case section heading, matching .whatsdue-title / .spend-title
+   so the three "section-heading with an icon" places in the app share
+   one voice. The old UPPERCASE eyebrow read as a form-field label. */
+.pending-title {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+}
+
+/* The one count in the app that gets the accent — people are waiting on you. */
+.pending-count {
+    min-width: 1.25rem;
+    padding: 0 var(--space-2);
+    background-color: var(--color-primary);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    line-height: 1.25rem;
+    text-align: center;
+    color: var(--color-on-primary);
+}
+
+.pending-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.pending-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--color-border-subtle);
+}
+.pending-item:first-child {
+    border-top: none;
+    padding-top: 0;
+}
+
+.pending-item-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.pending-name {
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pending-when {
+    font-size: var(--text-xs);
+    color: var(--color-text-faint);
+}
+
+/* Full-width, stacked, 48px each. */
+.pending-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.pending-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--control-height);
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-field);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    transition:
+        background-color 0.15s,
+        border-color 0.15s,
+        color 0.15s;
+}
+.pending-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pending-accept {
+    background-color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    color: var(--color-on-primary);
+}
+.pending-accept:hover:not(:disabled) {
+    background-color: var(--color-primary-active);
+    border-color: var(--color-primary-active);
+}
+
+.pending-decline {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-body);
+}
+.pending-decline:hover:not(:disabled) {
+    border-color: var(--color-error);
+    color: var(--color-error);
+}
+
+/* Wider viewports have room to put the name and the two actions on one line. */
+@media (min-width: 600px) {
+    .pending-item {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .pending-item-body {
+        flex: 1;
+    }
+    .pending-actions {
+        flex-direction: row;
+        flex-shrink: 0;
+    }
+}

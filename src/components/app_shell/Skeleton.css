@@ -1,0 +1,191 @@
+/**
+ * Skeleton placeholders. [Item 3b]
+ *
+ * Card chrome matches the real rows exactly — same padding, radius and
+ * hairline border — so the swap to real content moves nothing.
+ */
+
+.skeleton-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.skeleton-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.skeleton-lines {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+/* The shimmering element itself. */
+.skeleton-box {
+    background-color: var(--color-surface-muted);
+    border-radius: var(--radius-sm);
+    animation: skeletonPulse 1.6s ease-in-out infinite;
+}
+
+.skeleton-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+    border-radius: var(--radius-field);
+}
+.skeleton-avatar-sm {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Car card's wider image slot — matches .car-card-image's 4.5rem × 3rem so
+   swapping in the real row shifts nothing. */
+.skeleton-car-image {
+    width: 4.5rem;
+    height: 3rem;
+    flex-shrink: 0;
+    border-radius: var(--radius-field);
+}
+
+.skeleton-line {
+    height: 0.75rem;
+}
+.skeleton-line-title {
+    width: 55%;
+}
+.skeleton-line-meta {
+    width: 30%;
+}
+.skeleton-line-sub {
+    width: 40%;
+}
+.skeleton-line-body {
+    width: 80%;
+}
+.skeleton-line-when {
+    width: 25%;
+}
+
+/* Photo frame placeholder — matches .car-photo-frame's 16:10 aspect exactly
+   so the real image drops in without the row above or below moving. */
+.skeleton-photo-frame {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background-color: var(--color-accent-tint);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    animation: skeletonPulse 1.6s ease-in-out infinite;
+}
+
+/* Panel placeholder — the shape LogHistory, spend and DueList share. Padding
+   and border match .app-panel / .logs-panel / .spend-panel. */
+.skeleton-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+/* Same rows but no card chrome — used INSIDE an already-panelled section like
+   `.logs-panel`, so we don't nest a card inside a card. */
+.skeleton-panel-bare {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.skeleton-panel-rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.skeleton-panel-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+/* Summary strip on home. Matches .summary-strip's card padding + inner
+   layout so the real strip drops in cleanly. */
+.skeleton-summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.skeleton-summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.skeleton-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    align-items: center;
+}
+
+/* Group / car detail head — the h1 + one-line summary shape. */
+.skeleton-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.skeleton-head-title {
+    width: 60%;
+    height: 1.5rem;
+}
+.skeleton-head-meta {
+    width: 40%;
+}
+
+/* Staggered so the rows breathe out of step — a block of perfectly
+   synchronised bars reads as a broken image, not as loading. */
+.skeleton-card:nth-child(2) .skeleton-box {
+    animation-delay: 0.12s;
+}
+.skeleton-card:nth-child(3) .skeleton-box {
+    animation-delay: 0.24s;
+}
+.skeleton-card:nth-child(4) .skeleton-box {
+    animation-delay: 0.36s;
+}
+
+@keyframes skeletonPulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.45;
+    }
+}
+
+/* Reduced motion: no pulse, no shimmer — a static, faintly-toned block. It
+   still communicates "placeholder" through its shape and colour. */
+@media (prefers-reduced-motion: reduce) {
+    .skeleton-box,
+    .skeleton-photo-frame {
+        animation: none;
+        opacity: 0.72;
+    }
+}

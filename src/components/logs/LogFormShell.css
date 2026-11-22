@@ -1,0 +1,57 @@
+.auth-card.log-form-card {
+    max-width: var(--form-max);
+    display: flex;
+    flex-direction: column;
+}
+
+.log-form-card .icon-header {
+    justify-content: flex-start;
+    margin-bottom: var(--space-3);
+}
+
+.log-form-card .text-header {
+    margin-bottom: var(--space-5);
+    text-align: start;
+}
+
+.log-form-card .log-form-purpose {
+    margin: 0 0 var(--space-2);
+    text-align: inherit;
+}
+
+/*  Top-left back button. Sits above the icon-header, INSIDE the card so
+    it stays with the form as the page scrolls. Ghost styling — teal
+    text, no border, subtle hover tint — so it reads as tappable
+    without competing with the form's real controls. */
+.log-form-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    /* Full 44px tap target regardless of the label's rendered height. */
+    min-height: var(--tap-min);
+    padding: var(--space-2) var(--space-3);
+    /* Pull left so the chevron optically aligns with the card's content
+       edge rather than sitting a padding-step inward. */
+    margin: 0 auto var(--space-2) calc(var(--space-3) * -1);
+    /* Keep the button as compact as its label + chevron — otherwise it
+       would stretch to the card's inner width and read as a giant bar. */
+    align-self: flex-start;
+    background: none;
+    border: 0;
+    border-radius: var(--radius-field);
+    color: var(--color-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    transition:
+        background-color 0.15s,
+        color 0.15s;
+}
+.log-form-back:hover {
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary-active);
+}
+.log-form-back:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}

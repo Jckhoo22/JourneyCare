@@ -1,0 +1,112 @@
+.shelf-panel {
+    min-width: 0;
+}
+
+.shelf-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-4);
+}
+
+.shelf-header-title {
+    margin: 0;
+}
+
+.shelf-total {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-2);
+    color: var(--color-text-subtle);
+    font-size: var(--text-xs);
+}
+
+.shelf-total strong {
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.shelf-rows {
+    display: grid;
+    gap: var(--space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.shelf-row {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-field);
+    background: var(--color-surface-muted);
+}
+
+.shelf-row-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: var(--space-2);
+}
+
+.shelf-row-title {
+    margin: 0;
+    color: var(--color-text);
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+    overflow-wrap: anywhere;
+}
+
+.shelf-row-price {
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.shelf-row-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+}
+
+.shelf-row-footer:empty {
+    display: none;
+}
+
+.shelf-row-subtitle {
+    min-width: 0;
+    flex: 1 1 9rem;
+    color: var(--color-text-subtle);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+}
+
+.shelf-row-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-inline-start: auto;
+}
+
+.shelf-row-install.app-btn {
+    min-height: var(--tap-min);
+    padding-inline: var(--space-3);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+}
+
+.shelf-row-actions .overflow-menu-trigger {
+    width: var(--tap-min);
+    height: var(--tap-min);
+}

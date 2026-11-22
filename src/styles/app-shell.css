@@ -1,0 +1,364 @@
+/**
+ * Shared chrome for the signed-in screens: home, group (cars), members,
+ * invitation and notifications.
+ *
+ * Before the refresh each of those pages carried its own near-identical copy
+ * of the page shell, the content column, the back link, the h1 and the card
+ * treatment — five drifting definitions of the same four things. They live
+ * here now, so a spacing or radius decision is made once.
+ *
+ * Mobile first throughout. The only media query scales the content column's
+ * gutter and lets inline buttons stop being full-width.
+ */
+
+@import "./backdrop.css";
+
+/* ── Page ───────────────────────────────────────────────────────────────── */
+.app-page {
+    min-height: 100vh;
+    /* Fills the visual viewport on iOS, where 100vh sits under the URL bar.
+       Declared second so browsers without dvh keep the line above. */
+    min-height: 100dvh;
+    width: 100%;
+    background-color: var(--color-page);
+    font-family: var(--font-sans);
+    position: relative;
+    /**
+     * `clip`, NOT `hidden` — this is the whole of the two-scroll-contexts bug.
+     *
+     * `overflow-x: hidden` forces the other axis from `visible` to `auto`, so
+     * this element quietly became a SECOND scroll container nested inside the
+     * document's. It had real scrollable overflow too: `.blob-bottom` sits at
+     * `bottom: -12%`, hanging 12% of the page's height past the bottom edge.
+     * The result was a page that scrolled a short distance in the inner box,
+     * stalled, then handed off to the document — "scroll breaks in two halves".
+     *
+     * `clip` clips the x axis without establishing a scroll container, so
+     * `overflow-y` stays `visible` and the document is the only thing that
+     * scrolls. The `hidden` line above it is the pre-Safari-16 fallback.
+     */
+    overflow-x: hidden;
+    overflow-x: clip;
+}
+
+/**
+ * The content column.
+ *
+ * Padding carries the safe-area insets so the top bar clears the notch and the
+ * last action clears the home indicator. `--page-padding` is the phone gutter
+ * (20px) and widens on desktop; the safe-area terms are 0px everywhere else.
+ */
+.app-main {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: var(--page-max);
+    margin: 0 auto;
+    padding-top: calc(var(--space-4) + var(--safe-top));
+    padding-bottom: calc(var(--space-12) + var(--safe-bottom));
+    padding-left: calc(var(--page-padding) + var(--safe-left));
+    padding-right: calc(var(--page-padding) + var(--safe-right));
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+/* Back link chrome moved to the shared `<BackLink>` component — see
+   src/components/BackLink.css. Every detail page now uses that one link. */
+
+/* Keep single-column forms readable inside the shared page frame. */
+.app-form-column {
+    width: 100%;
+    max-width: var(--form-max);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+/* ── Headings ─────────────────────────────────────────────────────────────
+   Page h1s wear the display face (Bricolage Grotesque Variable). Anywhere a
+   heading names a screen, that's the one place personality earns its keep —
+   everywhere else it would tax reading. */
+.app-h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-display);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.app-banner {
+    min-width: 0;
+    padding: clamp(1rem, 3vw, 2rem);
+    border-radius: var(--radius-card);
+    background: linear-gradient(115deg, var(--color-primary-active), var(--color-primary));
+    color: var(--color-on-primary);
+}
+
+.app-banner-title {
+    margin: 0;
+    color: inherit;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: var(--weight-bold);
+    line-height: 1.12;
+    letter-spacing: var(--tracking-tight);
+    overflow-wrap: anywhere;
+}
+
+/* Small uppercase section label. 12px — the old 10px/11px labels were below
+   what's comfortably legible on a phone. */
+.app-eyebrow {
+    margin: 0;
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-subtle);
+}
+
+.app-hint {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-subtle);
+}
+
+.app-error {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+    color: var(--color-error-text);
+    background-color: var(--color-error-surface);
+    border-radius: var(--radius-field);
+}
+
+/* ── Panels ─────────────────────────────────────────────────────────────────
+   A hairline-bordered white card. No shadow — the border does the separating.
+
+   Padding is deliberately modest: on a 375px screen a panel sits inside the
+   page gutter, so its own padding is the SECOND gutter the content pays for.
+   20px + 16px leaves 303px of usable width, which is the budget everything
+   inside has to live within. Do not nest a panel inside a panel. */
+.app-panel {
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    /* Hairline stays, softened to `-subtle`. The card no longer relies on
+       the border alone — it now sits above the page on a two-layer shadow —
+       but the crisp edge still reads better than shadow-alone on high-DPI
+       screens. */
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+}
+
+.app-panel-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+    color: var(--color-text-muted);
+}
+
+.app-panel-title {
+    margin: 0;
+    color: var(--color-text);
+    font-family: var(--font-display);
+    font-size: var(--text-title);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+    overflow-wrap: anywhere;
+}
+
+.app-count {
+    min-width: 1.25rem;
+    padding: 0 var(--space-2);
+    background-color: var(--color-surface-muted);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    line-height: 1.25rem;
+    text-align: center;
+    color: var(--color-text-subtle);
+}
+
+/* The one place a count earns the accent: people are waiting on you. */
+.app-count-accent {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+}
+
+/* ── Empty states ───────────────────────────────────────────────────────── */
+.app-empty {
+    padding: var(--space-8) var(--space-5);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    text-align: center;
+}
+
+.app-empty-title {
+    margin: 0 0 var(--space-2) 0;
+    font-family: var(--font-display);
+    font-size: var(--text-title);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text);
+}
+
+.app-empty-body {
+    margin: 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────────
+   One height (48px) for every button and input in the app, so nothing sits a
+   few pixels off its neighbour. Full-width by default — that's the phone
+   layout — and only allowed to shrink to content at >=600px. */
+.app-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: var(--control-height);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-button);
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+    text-align: center;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+    cursor: pointer;
+    /* Transform and box-shadow are here so the primary button's pressed
+       state animates the same way secondary/danger will if they ever pick
+       up the treatment. */
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s,
+        transform 0.1s ease-out, box-shadow 0.1s ease-out;
+}
+.app-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.app-btn-primary {
+    background-color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    color: var(--color-on-primary);
+    box-shadow: var(--shadow-button);
+}
+.app-btn-primary:hover:not(:disabled) {
+    background-color: var(--color-primary-active);
+    border-color: var(--color-primary-active);
+}
+/* Pressed: shadow off + nudge down 1px, so the button feels physical
+   without needing a colour flash. */
+.app-btn-primary:active:not(:disabled) {
+    box-shadow: none;
+    transform: translateY(1px);
+}
+
+.app-btn-secondary {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-body);
+}
+.app-btn-secondary:hover:not(:disabled) {
+    border-color: var(--color-border-strong);
+    background-color: var(--color-surface-muted);
+}
+
+.app-btn-danger {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    color: var(--color-error-text);
+}
+.app-btn-danger:hover:not(:disabled) {
+    border-color: var(--color-error);
+    background-color: var(--color-error-surface);
+}
+
+/* Cautionary tier — a step below `.app-btn-danger`. Red-tinted text and
+   hairline, faint red hover fill. Nothing is being deleted (sign out, session
+   handoff, the like); the treatment reads as "confirm you meant this" rather
+   than "this is destructive". */
+.app-btn-danger-soft {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-error-border);
+    color: var(--color-error);
+}
+.app-btn-danger-soft:hover:not(:disabled) {
+    background-color: var(--color-error-surface);
+}
+
+.app-btn-danger-solid {
+    background-color: var(--color-error);
+    border: 1px solid var(--color-error);
+    color: var(--color-on-primary);
+}
+.app-btn-danger-solid:hover:not(:disabled) {
+    background-color: var(--color-error-text);
+    border-color: var(--color-error-text);
+}
+
+/* A text-weight action. Still 44px tall so it isn't a fat-finger hazard. */
+.app-btn-quiet {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--tap-min);
+    padding: 0 var(--space-2);
+    background: none;
+    border: none;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-subtle);
+    cursor: pointer;
+    transition: color 0.15s;
+}
+.app-btn-quiet:hover:not(:disabled) {
+    color: var(--color-text);
+}
+.app-btn-quiet:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Stacked full-width actions on a phone. */
+.app-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+@media (min-width: 600px) {
+    .app-actions {
+        flex-direction: row;
+    }
+    .app-actions > .app-btn {
+        flex: 1;
+    }
+    /* Inline actions (a Delete inside a panel) size to their label on desktop;
+       on a phone they stay full-width. */
+    .app-btn-inline {
+        width: auto;
+    }
+}
+
+@media (min-width: 760px) {
+    .app-main {
+        gap: var(--space-8);
+    }
+}
+
+.app-main > .top-bar {
+    min-height: 3.5rem;
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border-subtle);
+}

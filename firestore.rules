@@ -1,0 +1,1401 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------- helpers
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function groupData(groupId) {
+      return get(/databases/$(database)/documents/groups/$(groupId)).data;
+    }
+
+    function groupExists(groupId) {
+      return exists(/databases/$(database)/documents/groups/$(groupId));
+    }
+
+    // --- users/{uid} — the signed-in user's own profile. [S3]
+    // Readable and writable only by that uid. Nobody else, signed in or not,
+    // can see another person's profile.
+    //
+    // Unchanged by A6. The doc is now created on the username screen, after
+    // sign-in, rather than during registration — but "self-only" never depended
+    // on when the write happens, only on who makes it. Create and update are
+    // both covered by the same condition.
+    match /users/{userId} {
+
+      // Shape, not just ownership. Without this a user could write unbounded
+      // junk into their own profile — and `username` propagates outward, into
+      // group `members` maps and join-request notifications, so an oversized
+      // one is not contained to the writer. [T8 audit]
+      function isValidProfile() {
+        return request.resource.data.keys().hasOnly(
+                 ['username', 'email', 'createdAt', 'groupsOwned', 'language'])
+               && request.resource.data.keys().hasAll(['username', 'email'])
+               && request.resource.data.username is string
+               && request.resource.data.username.size() > 0
+               // Mirrors USERNAME_MAX_LENGTH in src/constants/regex.ts.
+               && request.resource.data.username.size() <= 20
+               && request.resource.data.email is string
+               && request.resource.data.email.size() <= 320
+               // P3b. Maintained alongside group create/delete so Phase 3 can
+               // validate a per-user group limit against it.
+               //
+               // Note what this is NOT: a security boundary. A user owns their
+               // own profile document, so they can write any value they like
+               // here — bounding it to a non-negative int is hygiene, not
+               // enforcement. Phase 3's limits are advisory for that reason.
+               && (!('groupsOwned' in request.resource.data)
+                   || (request.resource.data.groupsOwned is int
+                       && request.resource.data.groupsOwned >= 0))
+               // [T19, I18N2] UI language preference. Own-doc field, so
+               // the whitelist is the whole enforcement — no cross-user
+               // implications. The three-value enum matches the three
+               // dictionaries that ship (en/ms/zh).
+               && (!('language' in request.resource.data)
+                   || (request.resource.data.language is string
+                       && request.resource.data.language in ['en', 'ms', 'zh']));
+      }
+
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+
+      allow create, update: if request.auth != null
+                            && request.auth.uid == userId
+                            && isValidProfile();
+
+      // No delete path: account deletion is not a Phase 1 feature, and an
+      // orphaned profile is better than a half-deleted one.
+      allow delete: if false;
+    }
+
+    // --- groups/{groupId} — S1.
+    match /groups/{groupId} {
+
+      /**
+       * Every field a group document may hold. [T16 audit]
+       *
+       * Added in the T16 sweep, which found this the last write path in the
+       * file with no key whitelist — `users` got one in T8 and `public/info`
+       * with it, but the group document itself was still open. An owner could
+       * park an arbitrary field on their own group, and unlike a profile, a
+       * group is READ BY EVERY MEMBER on a live listener: a megabyte of junk
+       * here is a megabyte every member's phone downloads, and re-downloads on
+       * every change. Shape, not just auth — the same lesson as T8.
+       *
+       * Keep this list in step with GroupDoc in src/model/Group.ts. A field
+       * added there and not here is refused at runtime with permission-denied.
+       */
+      function hasOnlyGroupFields() {
+        return request.resource.data.keys().hasOnly(
+                 ['name', 'ownerId', 'createdAt', 'memberIds', 'members',
+                  'canAddCars', 'joinToken', 'carCount', 'spendByYear',
+                  'spendByMonth']);
+      }
+
+      // True when this update doesn't touch membership at all — e.g. a rename
+      // or a canAddCars change.
+      function membershipUnchanged() {
+        return request.resource.data.memberIds == resource.data.memberIds
+               && request.resource.data.members == resource.data.members;
+      }
+
+      // The group's name, whenever it is written. Mirrors G1's bounds and
+      // GROUP_NAME_MAX_LENGTH in src/constants/regex.ts. [G1, G12]
+      function isValidGroupName() {
+        return request.resource.data.name is string
+               && request.resource.data.name.size() > 0
+               && request.resource.data.name.size() <= 50;
+      }
+
+      // The invite token is a capability. Nothing on the metadata path may
+      // rotate it — Phase 1 has no rotation feature, so any change here would
+      // be someone silently invalidating every invite already handed out. [G12]
+      function tokenUnchanged() {
+        return request.resource.data.joinToken == resource.data.joinToken;
+      }
+
+      // True when this update adds exactly one uid and removes none, keeps the
+      // `members` map exactly in step with `memberIds`, and leaves the group's
+      // identity fields alone. This is the only shape an Accept may take. [G7, S2]
+      function isSingleMemberAddition() {
+        return request.resource.data.memberIds.size()
+                 == resource.data.memberIds.size() + 1
+               && request.resource.data.memberIds.toSet()
+                    .hasAll(resource.data.memberIds.toSet())
+               && request.resource.data.members.keys().toSet()
+                    == request.resource.data.memberIds.toSet()
+               && request.resource.data.name == resource.data.name
+               && request.resource.data.joinToken == resource.data.joinToken;
+      }
+
+      // The mirror image: exactly one uid leaves, none arrives. [G10]
+      function isSingleMemberRemoval() {
+        return request.resource.data.memberIds.size()
+                 == resource.data.memberIds.size() - 1
+               && resource.data.memberIds.toSet()
+                    .hasAll(request.resource.data.memberIds.toSet())
+               && request.resource.data.members.keys().toSet()
+                    == request.resource.data.memberIds.toSet()
+               && request.resource.data.name == resource.data.name
+               && request.resource.data.joinToken == resource.data.joinToken;
+      }
+
+      // A group always has an owner, so the owner can never be the one removed.
+      // An owner who wants out deletes the group instead. [G10, G11]
+      function ownerStillPresent() {
+        return resource.data.ownerId in request.resource.data.memberIds;
+      }
+
+      // Car-adding rights can only be handed to people actually in the group.
+      // Without this the owner could list a stranger's uid in `canAddCars` and
+      // the cars rules — which trust that array — would honour it. [C1]
+      function carAddersAreMembers() {
+        return request.resource.data.canAddCars.toSet()
+                 .hasOnly(request.resource.data.memberIds.toSet());
+      }
+
+      // What the owner may do: change metadata (rename, car-adding rights)
+      // without touching membership, accept one member, or remove one who
+      // isn't themselves.
+      //
+      // The metadata branch now states its own constraints rather than
+      // permitting anything that leaves membership alone: the name must be
+      // valid whenever it changes [G12], and the join token can never change.
+      function isOwnerUpdate() {
+        return resource.data.ownerId == request.auth.uid
+               && carAddersAreMembers()
+               && ((membershipUnchanged()
+                    && isValidGroupName()
+                    && tokenUnchanged())
+                   || isSingleMemberAddition()
+                   || (isSingleMemberRemoval() && ownerStillPresent()));
+      }
+
+      // `carCount` before this write. Groups created before T9 have no such
+      // field, and treating that as zero is what lets them take their first car
+      // without a migration. [P3a]
+      function priorCarCount() {
+        return 'carCount' in resource.data ? resource.data.carCount : 0;
+      }
+
+      // The counter half of a car create or delete. [P3a]
+      //
+      // A member with car-adding rights needs to move this, so it can't be
+      // owner-only — but it must not become a general "members may edit the
+      // group" hole, hence the affectedKeys check pinning every other field.
+      //
+      // What this deliberately CANNOT do is verify a car actually appeared:
+      // rules evaluate each write in a batch independently, so the sibling car
+      // create is invisible from here. It buys shape, not causation — a member
+      // could bump the count without adding a car. At family scale that costs
+      // a wrong number in a Phase 3 limit check, which is why P3a is recorded
+      // as a prepared field and not as an enforcement mechanism.
+      function isCarCountBump() {
+        return request.auth.uid in resource.data.memberIds
+               && request.resource.data.diff(resource.data)
+                    .affectedKeys().hasOnly(['carCount'])
+               && request.resource.data.carCount is int
+               && request.resource.data.carCount >= 0
+               && (request.resource.data.carCount == priorCarCount() + 1
+                   || request.resource.data.carCount == priorCarCount() - 1);
+      }
+
+      /**
+       * The group's half of a log write: year-bucketed spend. [S2]
+       *
+       * Same shape and same limits as the counter above — a member may move
+       * this and nothing else on the group. And the same honest caveat: rules
+       * can't see the sibling log write, so this validates the SHAPE of a spend
+       * change, never that a service actually cost that. T14's Recalculate
+       * action is what repairs drift.
+       *
+       * Nothing about the group's identity can ride along: the affectedKeys
+       * check pins the name, the token, membership and ownership.
+       *
+       * Note what is NOT validated: that each bucket holds a non-negative
+       * number. Rules can list a map's values but cannot test a predicate
+       * across them, and singling out the changed key would need to extract it
+       * from a Set, which the language also can't do. So the bucket COUNT and
+       * the set of keys are constrained here, and the values are trusted to
+       * the same degree as every other counter in the app.
+       *
+       * T14's Recalculate does NOT come through here — it has to be able to
+       * DROP a year that no longer has any spending in it, which the
+       * key-preservation check above forbids on purpose (a routine log write
+       * must never be able to wipe a previous year). It arrives instead as an
+       * owner metadata update: membership, name and token all unchanged, so
+       * isOwnerUpdate's first branch admits it. That is why the repair is
+       * owner-only. tests/rules/spend.test.ts covers both paths.
+       */
+      function priorSpendByYear() {
+        return 'spendByYear' in resource.data
+               ? resource.data.spendByYear : {};
+      }
+
+      function priorSpendByMonth() {
+        return 'spendByMonth' in resource.data
+               ? resource.data.spendByMonth : {};
+      }
+
+      /**
+       * A log write's group half: year + month buckets, one or the other or
+       * both. [S2, SPD1, T20]
+       *
+       * A single-log create moves one year and one month bucket. A visit
+       * (T17 multi-log) shares one date, so it also moves one of each. A
+       * date edit that crosses a year OR month boundary moves two of the
+       * side that changed. Nothing legitimate moves three of either.
+       *
+       * `spendByMonth` is bounded at 240 keys — 20 years' worth, well past
+       * anything a family produces, and enough headroom that Recalculate can
+       * rebuild whatever it finds without running into the cap.
+       */
+      function isSpendUpdate() {
+        return request.auth.uid in resource.data.memberIds
+               && request.resource.data.diff(resource.data)
+                    .affectedKeys().hasOnly(['spendByYear', 'spendByMonth'])
+               // Same-year edit: one delta. Cross-year edit: two.
+               && (!('spendByYear' in request.resource.data)
+                   || (request.resource.data.spendByYear
+                        .diff(priorSpendByYear()).affectedKeys().size() <= 2
+                       && request.resource.data.spendByYear.keys().toSet()
+                            .hasAll(priorSpendByYear().keys().toSet())
+                       && request.resource.data.spendByYear.keys().size() <= 200))
+               // Same-month edit: one delta. Cross-month edit: two.
+               && (!('spendByMonth' in request.resource.data)
+                   || (request.resource.data.spendByMonth
+                        .diff(priorSpendByMonth()).affectedKeys().size() <= 2
+                       && request.resource.data.spendByMonth.keys().toSet()
+                            .hasAll(priorSpendByMonth().keys().toSet())
+                       && request.resource.data.spendByMonth.keys().size() <= 240));
+      }
+
+      /**
+       * A member correcting their OWN display name. [SET2]
+       *
+       * `members[uid].username` is a denormalised copy of
+       * `users/{uid}.username`, kept on the group so rendering a member list
+       * costs one read instead of one per member. The copy has to be able to
+       * follow the original: without this branch, editing your name in
+       * Settings updates your profile document and then changes nothing
+       * anywhere a human actually reads it — the members list, the access
+       * grid, and every notification that names you keep the old one forever.
+       *
+       * Scoped as narrowly as the shape allows. Three nested pins:
+       *   1. only `members` may change on the group at all;
+       *   2. only the caller's own key inside that map;
+       *   3. only `username` inside that entry — `joinedAt` is held equal.
+       *
+       * So a member still cannot rename anybody else, cannot add or remove a
+       * member, cannot re-date their own joining, and cannot touch the name,
+       * the token, ownership, canAddCars or any counter. The Phase 1 security
+       * property is untouched: this branch requires the caller to ALREADY be
+       * in `memberIds` and cannot add them to it.
+       *
+       * The 20-character bound mirrors USERNAME_MAX_LENGTH in
+       * src/constants/regex.ts and the identical bound in isValidProfile()
+       * above — a name that the profile document would refuse must not be able
+       * to get in here through the side door.
+       */
+      function isOwnUsernameUpdate() {
+        return request.auth.uid in resource.data.memberIds
+               && request.auth.uid in resource.data.members
+               && request.resource.data.diff(resource.data)
+                    .affectedKeys().hasOnly(['members'])
+               && request.resource.data.members.diff(resource.data.members)
+                    .affectedKeys().hasOnly([request.auth.uid])
+               && request.resource.data.members[request.auth.uid].joinedAt
+                    == resource.data.members[request.auth.uid].joinedAt
+               && request.resource.data.members[request.auth.uid].username is string
+               && request.resource.data.members[request.auth.uid].username.size() > 0
+               && request.resource.data.members[request.auth.uid].username.size() <= 20;
+      }
+
+      // What an ordinary member may do: leave, and nothing else. [G10]
+      //
+      // Since exactly one uid is removed, "I was a member and now I am not"
+      // pins the departing uid to the caller — there is no shape here that
+      // removes somebody else. The owner is excluded outright.
+      function isSelfRemoval() {
+        return resource.data.ownerId != request.auth.uid
+               && request.auth.uid in resource.data.memberIds
+               && !(request.auth.uid in request.resource.data.memberIds)
+               && isSingleMemberRemoval()
+               // Can't keep car-adding rights on the way out.
+               && !(request.auth.uid in request.resource.data.canAddCars);
+      }
+
+      // Members only. This also makes H2's home query legal: a listing that
+      // isn't scoped by `memberIds array-contains <self>` is rejected outright
+      // rather than filtered down.
+      allow read: if request.auth != null
+                  && request.auth.uid in resource.data.memberIds;
+
+      // A creator may only seed a group containing themselves alone. Pinning
+      // all three collections to exactly [uid] is what stops someone creating
+      // a group with other people already inside it. [G1]
+      allow create: if request.auth != null
+                    && hasOnlyGroupFields()
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.memberIds == [request.auth.uid]
+                    && request.resource.data.members.keys() == [request.auth.uid]
+                    && request.resource.data.canAddCars == [request.auth.uid]
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
+                    && request.resource.data.name.size() <= 50
+                    && request.resource.data.joinToken is string
+                    && request.resource.data.joinToken.size() >= 20;
+
+      // Several writers, each shape-validated. [S1, S2, G10, SET2]
+      //
+      //   isOwnerUpdate       — the owner: metadata, accept one member, remove
+      //                         one member who isn't themselves.
+      //   isSelfRemoval       — any other member: leave, and nothing else.
+      //   isOwnUsernameUpdate — any member: their own denormalised display
+      //                         name, and nothing else.
+      //
+      // Ownership is immutable through this rule either way, and `name` /
+      // `joinToken` are pinned on every membership branch, so no membership
+      // change can smuggle in a rename, a token rotation, or a change of owner.
+      //
+      // A requester writing themselves *in* still fails: isOwnerUpdate needs
+      // them to be the owner, isSelfRemoval only ever shrinks the list, and
+      // isCarCountBump touches nothing but a number.
+      //
+      // `hasOnlyGroupFields()` sits OUTSIDE the branch list on purpose: a key
+      // whitelist that only some writers had to satisfy would be no whitelist
+      // at all, and the departing-member branch is exactly the one where it
+      // would have been forgotten. [T16 audit]
+      allow update: if isSignedIn()
+                    && hasOnlyGroupFields()
+                    && request.resource.data.ownerId == resource.data.ownerId
+                    && (isOwnerUpdate() || isSelfRemoval()
+                        || isCarCountBump() || isSpendUpdate()
+                        || isOwnUsernameUpdate());
+
+      // Owner only. [G11]
+      // Deleting a group leaves its `public` subcollection orphaned, as it will
+      // leave `cars` in Phase 2. Harmless here: an orphaned name with no group
+      // behind it resolves to "group no longer exists" on the join screen.
+      allow delete: if request.auth != null
+                    && resource.data.ownerId == request.auth.uid;
+
+      // --- groups/{groupId}/public/info — the invited-stranger window. [G5]
+      //
+      // An invitee is not a member yet, so they cannot read the group document
+      // above. Without this they could not be shown what they are joining.
+      // It holds the display name and nothing else: no token, no members, no
+      // car data. Reading it requires already knowing the group's auto-ID,
+      // which only comes from an invite link.
+      //
+      // The token is NOT here and must never be. It is the capability that
+      // authorises a request, and it is checked by the joinRequests create rule
+      // via get(), which is not bound by client read rules.
+      match /public/{docId} {
+
+        // Exactly two fields, nothing else. This is the only document in the
+        // system readable by someone outside the group, so an owner must not be
+        // able to park arbitrary content here for all signed-in users. [T8 audit]
+        function isValidPublicInfo() {
+          return request.resource.data.keys().hasOnly(['name', 'ownerId'])
+                 && request.resource.data.keys().hasAll(['name', 'ownerId'])
+                 && request.resource.data.name is string
+                 && request.resource.data.name.size() > 0
+                 && request.resource.data.name.size() <= 50;
+        }
+
+        allow read: if isSignedIn();
+
+        // At creation the parent group does not exist yet — group and info are
+        // written in one batch, and get() sees pre-batch state. Fall back to
+        // the claimed ownerId in that case; squatting an unborn auto-ID is
+        // unreachable in practice and inert if achieved.
+        allow create: if isSignedIn()
+                      && isValidPublicInfo()
+                      && request.resource.data.ownerId == request.auth.uid
+                      && (!groupExists(groupId)
+                          || groupData(groupId).ownerId == request.auth.uid);
+
+        allow update: if isSignedIn()
+                      && isValidPublicInfo()
+                      && groupExists(groupId)
+                      && groupData(groupId).ownerId == request.auth.uid
+                      && request.resource.data.ownerId == resource.data.ownerId;
+
+        allow delete: if isSignedIn()
+                      && groupExists(groupId)
+                      && groupData(groupId).ownerId == request.auth.uid;
+      }
+
+      // --- groups/{groupId}/cars/{carId} — S4. [C1, C2, C3, C6]
+      //
+      // The view floor: every member of the group can read every car in it.
+      // Writing is narrower — see mayAddCar() — and per-car EDIT rights (the
+      // `access` map) arrive with T11. Until then a car is immutable once
+      // created, which is the safe default to grow from.
+      match /cars/{carId} {
+
+        function isGroupMember() {
+          return isSignedIn()
+                 && groupExists(groupId)
+                 && request.auth.uid in groupData(groupId).memberIds;
+        }
+
+        // Owner, or a member the owner has explicitly listed. Mirrors
+        // canAddCars() in src/model/Group.ts — that hides the button, this
+        // refuses the write. [C1]
+        function mayAddCar() {
+          return isGroupMember()
+                 && (groupData(groupId).ownerId == request.auth.uid
+                     || request.auth.uid in groupData(groupId).canAddCars);
+        }
+
+        // Bounds mirror src/constants/regex.ts — keep the two in step.
+        //
+        // There is no `imageUrl`: the CarImages API that would have filled it
+        // is defunct and its successor is paid, so nothing can populate it and
+        // an unused writable string is only somewhere to park junk. See
+        // CONTEXT.md § the CarImages gate. `photo` is here, guarded by S6.
+        function isValidCar() {
+          return request.resource.data.keys().hasOnly(
+                   ['brand', 'model', 'year', 'nickname', 'plate', 'odometer',
+                    'photo', 'odometerCorrectedAt', 'odometerReading',
+                    'access', 'lastByType', 'statusStamp', 'totalSpend',
+                    'spendByType', 'createdBy', 'createdAt'])
+                 && request.resource.data.keys().hasAll(
+                   ['brand', 'model', 'year', 'access', 'lastByType',
+                    'statusStamp', 'totalSpend', 'createdBy', 'createdAt'])
+                 && request.resource.data.brand is string
+                 && request.resource.data.brand.size() > 0
+                 && request.resource.data.brand.size() <= 40
+                 && request.resource.data.model is string
+                 && request.resource.data.model.size() > 0
+                 && request.resource.data.model.size() <= 40
+                 && request.resource.data.year is int
+                 && request.resource.data.year >= 1950
+                 && request.resource.data.year <= 2100
+                 && (!('nickname' in request.resource.data)
+                     || (request.resource.data.nickname is string
+                         && request.resource.data.nickname.size() <= 40))
+                 && (!('plate' in request.resource.data)
+                     || (request.resource.data.plate is string
+                         && request.resource.data.plate.size() <= 20))
+                 && (!('odometer' in request.resource.data)
+                     || (request.resource.data.odometer is int
+                         && request.resource.data.odometer >= 0
+                         && request.resource.data.odometer <= 10000000))
+                 && isValidPhoto();
+        }
+
+        /**
+         * The photo size guard. [S6, C5, D4]
+         *
+         * Measured in CHARACTERS of the data URL, because that string is what
+         * occupies the document. The client compresses to 250,000; this allows
+         * 350,000, so a slightly-different encoder can't bounce a legitimate
+         * photo while a runaway one still can't approach Firestore's 1MB
+         * document ceiling.
+         *
+         * The prefix check is the cheap half of stopping this field being used
+         * as general storage: it has to look like a JPEG data URL, not an
+         * arbitrary 300KB string.
+         */
+        function isValidPhoto() {
+          return !('photo' in request.resource.data)
+                 || (request.resource.data.photo is string
+                     && request.resource.data.photo.size() <= 350000
+                     && request.resource.data.photo.matches(
+                          '^data:image/jpeg;base64,[A-Za-z0-9+/=]+$'));
+        }
+
+        // A brand-new car carries no history and grants nobody anything. The
+        // creator and the group owner hold edit implicitly (see hasCarEdit in
+        // src/model/Car.ts), so a create arriving with a populated `access`
+        // map is someone handing out rights the owner hasn't granted — which
+        // is exactly what C6 reserves to the owner. [C6, T11]
+        function isFreshCar() {
+          return request.resource.data.access.size() == 0
+                 && request.resource.data.lastByType.size() == 0
+                 && request.resource.data.statusStamp.size() == 0
+                 && request.resource.data.totalSpend == 0
+                 && request.resource.data.createdBy == request.auth.uid
+                 && (!('odometerReading' in request.resource.data)
+                     || hasValidOdometerReading());
+        }
+
+        /**
+         * Who may edit this car. [C6]
+         *
+         * Three ways in, two of them implicit — mirrors hasCarEdit() in
+         * src/model/Car.ts, which is what hides the controls. Keep the two in
+         * step: this one is the enforcement.
+         */
+        function carEdit() {
+          return isGroupMember()
+                 && (groupData(groupId).ownerId == request.auth.uid
+                     || resource.data.createdBy == request.auth.uid
+                     || (request.auth.uid in resource.data.access
+                         && resource.data.access[request.auth.uid] == 'edit'));
+        }
+
+        /**
+         * What an edit may touch. [C8]
+         *
+         * Everything else on the document is somebody else's business:
+         * `access` is the owner's alone and arrives in T11, `createdBy` and
+         * `createdAt` are history, and `lastByType` / `totalSpend` /
+         * `statusStamp` are denormalisations that only a log write is allowed
+         * to move (T12). Pinning them here means an edit-holder cannot rewrite
+         * the car's spend or grant themselves anything.
+         */
+        function touchesOnlyEditableFields() {
+          return request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['brand', 'model', 'year', 'nickname', 'plate',
+                             'odometer', 'photo', 'odometerCorrectedAt', 'odometerReading'])
+                 && request.resource.data.access == resource.data.access
+                 && request.resource.data.createdBy == resource.data.createdBy
+                 && request.resource.data.createdAt == resource.data.createdAt
+                 && request.resource.data.totalSpend == resource.data.totalSpend
+                 && request.resource.data.lastByType == resource.data.lastByType
+                 && request.resource.data.statusStamp == resource.data.statusStamp
+                 && (!('spendByType' in request.resource.data)
+                     ? !('spendByType' in resource.data)
+                     : ('spendByType' in resource.data
+                        && request.resource.data.spendByType
+                             == resource.data.spendByType));
+        }
+
+        /**
+         * The denormalisation half of a log write. [L1–L6, S1]
+         *
+         * A log mutation is a batch across three documents: the log itself, the
+         * car's `totalSpend` / `lastByType`, and the group's `spendByYear`. This
+         * branch is the car's part of it.
+         *
+         * ── What this CANNOT check, and why ──────────────────────────────────
+         * Rules evaluate each write in a batch independently, so from here the
+         * sibling log write is invisible. There is no way to require that a
+         * `totalSpend` change accompanies a real log — the same wall
+         * `carCount` hit in T9, and why plan.md calls this "loose numeric
+         * honesty" and why T14 ships a Recalculate action.
+         *
+         * ── T14 rides this branch, deliberately ──────────────────────────────
+         * "Recalculate totals" rewrites `totalSpend` and `lastByType` from a
+         * full read of the history, outside any log batch. It needs no branch
+         * of its own precisely BECAUSE of the paragraph above: this rule never
+         * could tell a log-accompanied counter change from a standalone one,
+         * so the repair is already the shape it permits. Recalculate being
+         * owner-only is a product decision about a heavy read, NOT a boundary
+         * these rules enforce — an edit holder can move these numbers either
+         * way, and must be able to, because logging a service does exactly
+         * that. tests/rules/spend.test.ts pins both halves of that sentence.
+         *
+         * If this branch is ever narrowed, Recalculate breaks with it. Narrow
+         * it and give the repair its own branch in the same change.
+         *
+         * What it CAN do, and does:
+         *   • restrict these fields to carEdit holders — a view-only member
+         *     cannot touch the totals at all;
+         *   • keep the totals branch separate from the details branch, so a
+         *     spend change can never carry a photo, an odometer or an access
+         *     grant along with it;
+         *   • bound the values, so a total can't go negative or non-numeric.
+         *
+         * `odometer` rides along because logging a service is the moment people
+         * update the reading — but it still has to move forward, so the
+         * monotonic guard applies to this branch exactly as it does to a manual
+         * edit. [C9]
+         */
+        function isLogDenormalisation() {
+          return carEdit()
+                 && request.resource.data.diff(resource.data).affectedKeys()
+                      .hasOnly(['totalSpend', 'lastByType', 'spendByType',
+                                'odometer', 'odometerCorrectedAt', 'odometerReading'])
+                 && request.resource.data.totalSpend is number
+                 && request.resource.data.totalSpend >= 0
+                 && request.resource.data.access == resource.data.access
+                 && request.resource.data.createdBy == resource.data.createdBy
+                 && request.resource.data.statusStamp == resource.data.statusStamp
+                 && odometerChangeIsHonest();
+        }
+
+        /** The reading this write leaves behind, or -1 when there isn't one. */
+        function nextOdometer() {
+          return 'odometer' in request.resource.data
+                 ? request.resource.data.odometer : -1;
+        }
+
+        function priorOdometer() {
+          return 'odometer' in resource.data ? resource.data.odometer : -1;
+        }
+
+        /**
+         * The monotonic guard. [C9]
+         *
+         * An odometer does not run backwards, so a decrease is only accepted
+         * when the same write stamps `odometerCorrectedAt` with the server's
+         * time — an explicit, recorded "this was a correction" rather than a
+         * silent overwrite. Increases must NOT stamp it, so the field always
+         * means what it says.
+         *
+         * A car with no prior reading can be given any value: there is nothing
+         * to run backwards from.
+         */
+        function odometerMovesForward() {
+          return priorOdometer() < 0
+                 || nextOdometer() < 0
+                 || nextOdometer() >= priorOdometer();
+        }
+
+        function correctionIsStamped() {
+          return request.resource.data.odometerCorrectedAt == request.time;
+        }
+
+        function hasValidOdometerReading() {
+          let reading = request.resource.data.odometerReading;
+          return reading is map && reading.keys().hasOnly(['value', 'at'])
+                 && reading.keys().hasAll(['value', 'at'])
+                 && 'odometer' in request.resource.data
+                 && reading.value == request.resource.data.odometer
+                 && reading.at is timestamp && reading.at <= request.time;
+        }
+
+        function odometerChangeIsHonest() {
+          return (!('odometerReading' in request.resource.data.diff(resource.data).affectedKeys())
+                  || hasValidOdometerReading())
+                 && (odometerMovesForward()
+                 ? !('odometerCorrectedAt'
+                       in request.resource.data.diff(resource.data).affectedKeys())
+                 : correctionIsStamped());
+        }
+
+        /**
+         * The next-due dedupe stamp. [R4]
+         *
+         * `statusStamp` records the status each service type was last
+         * NOTIFIED at, so re-rendering the same overdue oil change writes
+         * nothing. It moves in the same batch as the notifications it
+         * suppresses.
+         *
+         * Its own branch, and narrow: the only key it may touch is
+         * `statusStamp`, so a stamp update can never carry an odometer, a
+         * photo or a spend change along with it.
+         *
+         * Restricted to carEdit holders because they are the only people the
+         * client notifies — a view-only member has no reminder to suppress and
+         * so has no business moving the marker that suppresses it.
+         *
+         * ── What this CANNOT check ───────────────────────────────────────────
+         * The same wall every denormalisation in this file hits: a batch's
+         * writes are evaluated independently, so from here the sibling
+         * notification creates are invisible, and there is no way to require
+         * that a stamp move be accompanied by them — nor to recompute from
+         * `lastByType` whether the status claimed is the status that holds.
+         * The honest damage from a lie is bounded: a bogus stamp suppresses or
+         * repeats YOUR OWN group's reminders. It grants no read, no write and
+         * no access anywhere else, and the next real transition overwrites it.
+         */
+        function isStatusStampUpdate() {
+          return carEdit()
+                 && request.resource.data.diff(resource.data)
+                      .affectedKeys().hasOnly(['statusStamp'])
+                 // The two statuses worth remembering. OK is absence — a type
+                 // that has fallen back leaves the map entirely.
+                 && request.resource.data.statusStamp.values()
+                      .hasOnly(['due_soon', 'overdue'])
+                 // One entry per service type; the catalogue is far smaller.
+                 && request.resource.data.statusStamp.size() <= 50;
+        }
+
+        /**
+         * Granting and revoking per-car edit. [C6, C7]
+         *
+         * A separate branch from the detail edit, and deliberately narrow: the
+         * ONLY key it may touch is `access`. That is what stops a grant
+         * carrying an odometer change, a photo, or anything else along with it
+         * — the diff is the whole check, exactly as plan.md specifies.
+         *
+         * Owner-only. An edit-holder must never be able to widen the circle
+         * they're in; that is the difference between "can use this car" and
+         * "can decide who uses this car".
+         */
+        function isAccessUpdate() {
+          return isGroupMember()
+                 && groupData(groupId).ownerId == request.auth.uid
+                 && request.resource.data.diff(resource.data)
+                      .affectedKeys().hasOnly(['access'])
+                 && isValidAccessMap();
+        }
+
+        /**
+         * The access map can only ever say "this member has edit".
+         *
+         * Three constraints, each closing a different hole:
+         *   • every value is 'edit' — there is no other grade, and inventing
+         *     one would mean the UI and the rules disagree about what it means;
+         *   • every key is a current group member — a uid outside the group
+         *     must not be able to hold edit on something inside it;
+         *   • the owner and the creator are NOT in it. They hold edit
+         *     implicitly (see hasCarEdit in src/model/Car.ts), so writing them
+         *     here would create a second, drift-prone source of truth for
+         *     something the document already knows — and it would imply the
+         *     entry could be removed to revoke them, which C6 says it can't.
+         */
+        function isValidAccessMap() {
+          return request.resource.data.access.values().hasOnly(['edit'])
+                 && request.resource.data.access.keys().toSet()
+                      .hasOnly(groupData(groupId).memberIds.toSet())
+                 && !(groupData(groupId).ownerId in request.resource.data.access)
+                 && !(resource.data.createdBy in request.resource.data.access);
+        }
+
+        allow read: if isGroupMember();
+
+        allow create: if mayAddCar() && isValidCar() && isFreshCar();
+
+        // Two writers, each shape-validated:
+        //
+        //   carEdit branch    — details, odometer and photo, by anyone with
+        //                       edit on this car. touchesOnlyEditableFields()
+        //                       pins `access`, so an edit-holder can change the
+        //                       car but never who else can. [C8]
+        //   isAccessUpdate    — the access map alone, owner only. [C6, C7]
+        //   isLogDenormalisation — the totals a log write maintains. [L1–L6]
+        //   isStatusStampUpdate  — the next-due dedupe marker alone. [R4]
+        //
+        // None can do another's job, which is the point.
+        allow update: if (carEdit()
+                          && isValidCar()
+                          && touchesOnlyEditableFields()
+                          && odometerChangeIsHonest())
+                      || isAccessUpdate()
+                      || isLogDenormalisation()
+                      || isStatusStampUpdate();
+
+        // Owner or creator, never an ordinary edit-holder: deleting a car takes
+        // its whole maintenance history with it, which is a bigger act than
+        // editing one. [C8]
+        allow delete: if isGroupMember()
+                      && (groupData(groupId).ownerId == request.auth.uid
+                          || resource.data.createdBy == request.auth.uid);
+
+        /**
+         * Maintenance logs. T12 builds these properly — read and delete exist
+         * now only because C8 says deleting a car deletes its logs, and a
+         * cascade that cannot read or delete is theatre.
+         *
+         * Creating and updating a log stays shut until T12 brings its shape
+         * validation and the denormalisation batch that goes with it.
+         */
+        match /logs/{logId} {
+          function parentCar() {
+            return get(/databases/$(database)/documents/groups/$(groupId)/cars/$(carId)).data;
+          }
+
+          /**
+           * Edit on the PARENT CAR, via get(). [L1, L5]
+           *
+           * Deliberately the car's permission, not the log's: a maintenance
+           * history belongs to the car, and someone trusted to change the
+           * odometer is the same person trusted to record why it moved.
+           */
+          function canEditLogs() {
+            return isGroupMember()
+                   && (groupData(groupId).ownerId == request.auth.uid
+                       || parentCar().createdBy == request.auth.uid
+                       || (request.auth.uid in parentCar().access
+                           && parentCar().access[request.auth.uid] == 'edit'));
+          }
+
+          function isValidLog() {
+            return request.resource.data.keys().hasOnly(
+                     ['type', 'customLabel', 'cost', 'date', 'odometer',
+                      'intervalKm', 'intervalMonths', 'notes',
+                      'createdBy', 'createdAt'])
+                   && request.resource.data.keys().hasAll(
+                     ['type', 'cost', 'date', 'createdBy', 'createdAt'])
+                   && request.resource.data.type is string
+                   && request.resource.data.type.size() > 0
+                   && request.resource.data.type.size() <= 40
+                   // Zero is legitimate — warranty work, or a favour. [L2]
+                   && request.resource.data.cost is number
+                   && request.resource.data.cost >= 0
+                   && request.resource.data.cost <= 1000000
+                   && request.resource.data.date is timestamp
+                   // A service cannot have happened in the future. [L2]
+                   && request.resource.data.date <= request.time
+                   && request.resource.data.createdAt is timestamp
+                   && (!('customLabel' in request.resource.data)
+                       || (request.resource.data.customLabel is string
+                           && request.resource.data.customLabel.size() > 0
+                           && request.resource.data.customLabel.size() <= 40))
+                   && (!('odometer' in request.resource.data)
+                       || (request.resource.data.odometer is int
+                           && request.resource.data.odometer >= 0
+                           && request.resource.data.odometer <= 10000000))
+                   && (!('intervalKm' in request.resource.data)
+                       || (request.resource.data.intervalKm is int
+                           && request.resource.data.intervalKm > 0
+                           && request.resource.data.intervalKm <= 1000000))
+                   && (!('intervalMonths' in request.resource.data)
+                       || (request.resource.data.intervalMonths is int
+                           && request.resource.data.intervalMonths > 0
+                           && request.resource.data.intervalMonths <= 600))
+                   && (!('notes' in request.resource.data)
+                       || (request.resource.data.notes is string
+                           && request.resource.data.notes.size() <= 500));
+          }
+
+          /**
+           * Who recorded it. [L5]
+           *
+           * Pinned to the caller: the username shows in the history, so a
+           * forged `createdBy` would put words in someone else's mouth about
+           * money that was spent.
+           */
+          function createdByIsCaller() {
+            return request.resource.data.createdBy.keys().hasOnly(['uid', 'username'])
+                   && request.resource.data.createdBy.keys().hasAll(['uid', 'username'])
+                   && request.resource.data.createdBy.uid == request.auth.uid
+                   && request.resource.data.createdBy.username is string
+                   && request.resource.data.createdBy.username.size() > 0
+                   && request.resource.data.createdBy.username.size() <= 20;
+          }
+
+          allow read: if isGroupMember();
+
+          allow create: if canEditLogs() && isValidLog() && createdByIsCaller();
+
+          // An edit may change what was recorded, never WHO recorded it or
+          // when — that attribution is the history's only anchor. [L5]
+          allow update: if canEditLogs()
+                        && isValidLog()
+                        && request.resource.data.createdBy == resource.data.createdBy
+                        && request.resource.data.createdAt == resource.data.createdAt;
+
+          allow delete: if canEditLogs();
+        }
+
+        /**
+         * Parts shelf. [T18, PRT1–PRT7]
+         *
+         * The shelf holds parts a car's edit-holders have bought but not yet
+         * installed. On-hand parts affect nothing (PRT3): no lastByType, no
+         * next-due, no bar chart, no spend denorm. Cost only counts when the
+         * part is INSTALLED (decision #25), which flips it via the same-batch
+         * transition below (PRT4, PRT7).
+         *
+         * Read floor mirrors logs: any group member can read the shelf, in
+         * step with the car and its history. Write is carEdit on the parent
+         * car — same shape as canEditLogs.
+         */
+        match /parts/{partId} {
+          function parentCarForParts() {
+            return get(/databases/$(database)/documents/groups/$(groupId)/cars/$(carId)).data;
+          }
+
+          function canEditParts() {
+            return isGroupMember()
+                   && (groupData(groupId).ownerId == request.auth.uid
+                       || parentCarForParts().createdBy == request.auth.uid
+                       || (request.auth.uid in parentCarForParts().access
+                           && parentCarForParts().access[request.auth.uid] == 'edit'));
+          }
+
+          /**
+           * A well-formed part document. [PRT1]
+           *
+           * The whitelist is deliberately narrow. `installedLogId` is only
+           * legitimate on an installed part; the "installed with no log id"
+           * combination is refused by the transition rule below.
+           */
+          function isValidPart() {
+            return request.resource.data.keys().hasOnly(
+                     ['typeId', 'customName', 'label', 'cost', 'purchaseDate',
+                      'notes', 'status', 'installedLogId',
+                      'createdBy', 'createdAt'])
+                   && request.resource.data.keys().hasAll(
+                     ['typeId', 'cost', 'purchaseDate', 'status',
+                      'createdBy', 'createdAt'])
+                   && request.resource.data.typeId is string
+                   && request.resource.data.typeId.size() > 0
+                   && request.resource.data.typeId.size() <= 40
+                   && request.resource.data.status
+                        in ['on_hand', 'installed']
+                   && request.resource.data.cost is number
+                   && request.resource.data.cost >= 0
+                   && request.resource.data.cost <= 1000000
+                   && request.resource.data.purchaseDate is timestamp
+                   && request.resource.data.createdAt is timestamp
+                   && (!('customName' in request.resource.data)
+                       || (request.resource.data.customName is string
+                           && request.resource.data.customName.size() > 0
+                           && request.resource.data.customName.size() <= 60))
+                   && (!('label' in request.resource.data)
+                       || (request.resource.data.label is string
+                           && request.resource.data.label.size() <= 60))
+                   && (!('notes' in request.resource.data)
+                       || (request.resource.data.notes is string
+                           && request.resource.data.notes.size() <= 500))
+                   && (!('installedLogId' in request.resource.data)
+                       || (request.resource.data.installedLogId is string
+                           && request.resource.data.installedLogId.size() > 0
+                           && request.resource.data.installedLogId.size() <= 60));
+          }
+
+          function partCreatedByIsCaller() {
+            return request.resource.data.createdBy is string
+                   && request.resource.data.createdBy == request.auth.uid;
+          }
+
+          /** A fresh shelf part: on_hand, no install pointer. */
+          function isFreshShelfPart() {
+            return request.resource.data.status == 'on_hand'
+                   && !('installedLogId' in request.resource.data);
+          }
+
+          /**
+           * Install transition. [PRT4, PRT7]
+           *
+           * The on_hand → installed flip may ONLY happen alongside its log —
+           * the visit form's batch write. Rules evaluate writes in a batch
+           * independently, so the SIBLING log create is invisible from here.
+           * What we CAN enforce is the shape: after the flip the part must
+           * carry an `installedLogId`, and the cost is immutable at this
+           * point (it already made it into the denorm on the visit's car
+           * update, decision #25).
+           */
+          function isInstallTransition() {
+            return resource.data.status == 'on_hand'
+                   && request.resource.data.status == 'installed'
+                   && request.resource.data.installedLogId is string
+                   && request.resource.data.installedLogId.size() > 0
+                   // Cost never moves on install — the denorm already counts it.
+                   && request.resource.data.cost == resource.data.cost
+                   && request.resource.data.typeId == resource.data.typeId
+                   && request.resource.data.createdBy == resource.data.createdBy
+                   && request.resource.data.createdAt == resource.data.createdAt;
+          }
+
+          /**
+           * Reversion. [PRT6]
+           *
+           * Deleting the linked log reverts the part to on_hand in the same
+           * batch. That's what stops "installed" from being a state that
+           * outlives the history that put it there.
+           */
+          function isRevertTransition() {
+            return resource.data.status == 'installed'
+                   && request.resource.data.status == 'on_hand'
+                   && !('installedLogId' in request.resource.data)
+                   && request.resource.data.cost == resource.data.cost
+                   && request.resource.data.typeId == resource.data.typeId
+                   && request.resource.data.createdBy == resource.data.createdBy
+                   && request.resource.data.createdAt == resource.data.createdAt;
+          }
+
+          /**
+           * A shelf-only edit: fixing a typo or label, adjusting cost while
+           * still on the shelf. Cost is only immutable AFTER install.
+           */
+          function isShelfEdit() {
+            return resource.data.status == 'on_hand'
+                   && request.resource.data.status == 'on_hand'
+                   && !('installedLogId' in request.resource.data)
+                   && request.resource.data.createdBy == resource.data.createdBy
+                   && request.resource.data.createdAt == resource.data.createdAt;
+          }
+
+          allow read: if isGroupMember();
+
+          allow create: if canEditParts()
+                        && isValidPart()
+                        && isFreshShelfPart()
+                        && partCreatedByIsCaller();
+
+          allow update: if canEditParts()
+                        && isValidPart()
+                        && (isInstallTransition()
+                            || isRevertTransition()
+                            || isShelfEdit());
+
+          // On-hand parts delete freely. Installed parts should be deleted by
+          // deleting the linked log; but we also permit direct delete for the
+          // group-delete cascade (which runs client-side deepest-first, exactly
+          // like logs).
+          allow delete: if canEditParts();
+        }
+      }
+    }
+
+    // --- joinRequests/{requestId} — S2.
+    //
+    // The whole point of this collection is that it is the ONLY thing a
+    // would-be member can write, and all it can ever say is "this is me, and I
+    // would like in". Turning that into membership requires the owner.
+    match /joinRequests/{requestId} {
+
+      function isRequester() {
+        return isSignedIn() && resource.data.uid == request.auth.uid;
+      }
+
+      function isGroupOwner() {
+        return isSignedIn()
+               && groupExists(resource.data.groupId)
+               && groupData(resource.data.groupId).ownerId == request.auth.uid;
+      }
+
+      /**
+       * Every field a join request may hold. [T16 audit]
+       *
+       * The other write path the sweep found without a key whitelist. This one
+       * is a document a NON-MEMBER creates and a group owner then reads, which
+       * makes it the only place in the system where a stranger's text reaches
+       * an owner's screen — `username` is already length-capped for exactly
+       * that reason, and an open key set walked straight around the cap.
+       *
+       * Keep in step with JoinRequestDoc in src/model/JoinRequest.ts.
+       */
+      function hasOnlyRequestFields() {
+        return request.resource.data.keys().hasOnly(
+                 ['uid', 'groupId', 'token', 'username', 'status', 'createdAt']);
+      }
+
+      // Requester reads their own; owner reads those for their group. Ordered so
+      // the requester's check short-circuits before any get() is spent.
+      allow read: if isRequester() || isGroupOwner();
+
+      // For yourself only, pending only, and only against a group whose current
+      // joinToken you can actually present. A stale or guessed token fails here,
+      // which is what stops the invite URL being brute-forced into a request.
+      //
+      // Already-members are refused: they have nothing to request.
+      allow create: if isSignedIn()
+                    && hasOnlyRequestFields()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.groupId is string
+                    && request.resource.data.token is string
+                    && request.resource.data.username is string
+                    // Capped: an accept copies this into the group's `members`
+                    // map, so an unbounded username would bloat the group doc
+                    // for everyone in it. [T8 audit]
+                    && request.resource.data.username.size() > 0
+                    && request.resource.data.username.size() <= 20
+                    && groupExists(request.resource.data.groupId)
+                    && groupData(request.resource.data.groupId).joinToken
+                         == request.resource.data.token
+                    && !(request.auth.uid
+                           in groupData(request.resource.data.groupId).memberIds);
+
+      // Only the owner decides, only once, and only to a decided state. The
+      // request's subject and group are immutable, so a decision cannot be
+      // redirected onto a different person or group.
+      allow update: if isGroupOwner()
+                    && hasOnlyRequestFields()
+                    && resource.data.status == 'pending'
+                    && request.resource.data.status in ['accepted', 'declined']
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.groupId == resource.data.groupId;
+
+      // Requests are an audit trail of who asked for what. Nobody deletes them
+      // in Phase 1.
+      allow delete: if false;
+    }
+
+    // --- notifications/{userId}/items/{itemId} — N5.
+    //
+    // Everyone owns their own subtree outright. The interesting half is create:
+    // one user writing into ANOTHER user's subtree, which is how a join request
+    // reaches an owner and a decision reaches a requester. That is allowed only
+    // in tightly-shaped, group-anchored forms, so this can never become a
+    // general messaging channel.
+    match /notifications/{userId}/items/{itemId} {
+
+      function isOwnSubtree() {
+        return isSignedIn() && request.auth.uid == userId;
+      }
+
+      // The envelope: whitelisted top-level keys, `read` starts false, and the
+      // notification is anchored to a group that actually exists. Shared by
+      // every type; each shape below adds its own payload rules.
+      function isWellFormedEnvelope() {
+        return request.resource.data.keys().hasOnly(
+                 ['type', 'payload', 'read', 'createdAt'])
+               && request.resource.data.keys().hasAll(
+                 ['type', 'payload', 'read', 'createdAt'])
+               && request.resource.data.read == false
+               && request.resource.data.createdAt is timestamp
+               && request.resource.data.type is string
+               && request.resource.data.payload.groupId is string
+               && groupExists(request.resource.data.payload.groupId);
+      }
+
+      // The original payload shape: the group's name and nothing invented.
+      // Used by the four types that simply name a group. [G5, G7, G10]
+      function isNamedGroupPayload() {
+        return request.resource.data.payload.keys().hasOnly(
+                 ['groupId', 'groupName', 'username'])
+               && request.resource.data.payload.keys().hasAll(
+                 ['groupId', 'groupName'])
+               && request.resource.data.payload.groupName is string
+               // The displayed group name must be the group's real name, so a
+               // notification cannot carry invented text.
+               && groupData(request.resource.data.payload.groupId).name
+                    == request.resource.data.payload.groupName;
+      }
+
+      // A would-be joiner telling the owner they asked. Target must be that
+      // group's owner; sender must not already be in the group. [G5]
+      function isJoinRequestNotice() {
+        return request.resource.data.type == 'join_request'
+               && groupData(request.resource.data.payload.groupId).ownerId == userId
+               && !(request.auth.uid
+                      in groupData(request.resource.data.payload.groupId).memberIds)
+               && request.resource.data.payload.keys().hasAll(['username'])
+               && request.resource.data.payload.username is string
+               && request.resource.data.payload.username.size() > 0
+               // Capped so it cannot be used to inject a wall of text.
+               && request.resource.data.payload.username.size() <= 20;
+      }
+
+      // An owner telling someone what they decided. get() sees pre-batch state,
+      // which is what makes the membership checks below meaningful:
+      // accepted/declined go to someone not yet in; removed goes to someone
+      // still in. [G7, G10]
+      function isOwnerDecisionNotice() {
+        return request.resource.data.type
+                 in ['request_accepted', 'request_declined', 'removed_from_group']
+               && groupData(request.resource.data.payload.groupId).ownerId
+                    == request.auth.uid
+               && (
+                    (request.resource.data.type == 'removed_from_group'
+                     && userId in groupData(request.resource.data.payload.groupId).memberIds)
+                    ||
+                    (request.resource.data.type != 'removed_from_group'
+                     && !(userId in groupData(request.resource.data.payload.groupId).memberIds))
+                  );
+      }
+
+      /**
+       * The owner announcing a rename to the rest of the group. [G12]
+       *
+       * Its own payload shape, because it is the one notification that names
+       * something other than the group's current name.
+       *
+       * `oldName` IS validated against the group document, and can be: rules
+       * `get()` sees pre-batch state, so while this create is evaluated the
+       * group still holds its old name — the rename is the sibling write in the
+       * same batch and is invisible from here. `newName` is that invisible
+       * value, so it is length-checked only. That grants the renamer nothing:
+       * they are the owner, and an owner who wants arbitrary text in front of
+       * their members can simply rename the group to it. What matters is that
+       * only the owner can write this type, and never to themselves.
+       */
+      function isGroupRenamedNotice() {
+        return request.resource.data.type == 'group_renamed'
+               && request.resource.data.payload.keys().hasOnly(
+                    ['groupId', 'oldName', 'newName', 'username'])
+               && request.resource.data.payload.keys().hasAll(
+                    ['groupId', 'oldName', 'newName', 'username'])
+               // Only the group's owner renames it.
+               && groupData(request.resource.data.payload.groupId).ownerId
+                    == request.auth.uid
+               // Only members hear about it...
+               && userId in groupData(request.resource.data.payload.groupId).memberIds
+               // ...and never the person who did it.
+               && userId != request.auth.uid
+               && request.resource.data.payload.oldName is string
+               // Pre-batch state, so this is still the name being replaced.
+               && request.resource.data.payload.oldName
+                    == groupData(request.resource.data.payload.groupId).name
+               && request.resource.data.payload.newName is string
+               && request.resource.data.payload.newName.size() > 0
+               // Same bound the group's own name is held to. [G1]
+               && request.resource.data.payload.newName.size() <= 50
+               && request.resource.data.payload.username is string
+               && request.resource.data.payload.username.size() > 0
+               && request.resource.data.payload.username.size() <= 20;
+      }
+
+      /**
+       * The owner telling a member their access to a car changed. [N6, C6]
+       *
+       * Written in the same batch as the access-map update, so a member is
+       * never silently granted or quietly stripped.
+       *
+       * `groupName` is pinned to the group's real name, as everywhere else.
+       * `carName` is NOT pinned: it's a derived display string (the nickname,
+       * or make + model), and recomputing that derivation in rules would be
+       * brittle in exactly the way that gets a legitimate write refused six
+       * months later. It's bounded instead — and bounded honestly, at the
+       * longest name the derivation can produce.
+       *
+       * `carId` arrived in T15 so the notification can open the car it names
+       * rather than the group containing it. It is checked for EXISTENCE the
+       * same way isDueNotice checks its own — a notification must not be able
+       * to point at a car that was never in this group, because the tap
+       * target is a URL somebody else will follow.
+       */
+      function accessCarExists() {
+        return request.resource.data.payload.carId is string
+               && request.resource.data.payload.carId.size() > 0
+               && exists(/databases/$(database)/documents/groups/$(request.resource.data.payload.groupId)/cars/$(request.resource.data.payload.carId));
+      }
+
+      function isAccessChangedNotice() {
+        return request.resource.data.type == 'access_changed'
+               && request.resource.data.payload.keys().hasOnly(
+                    ['groupId', 'groupName', 'carId', 'carName', 'granted'])
+               && request.resource.data.payload.keys().hasAll(
+                    ['groupId', 'groupName', 'carId', 'carName', 'granted'])
+               && accessCarExists()
+               // Only the owner grants or revokes, so only the owner announces.
+               && groupData(request.resource.data.payload.groupId).ownerId
+                    == request.auth.uid
+               // Only a member of the group can hold access in it...
+               && userId in groupData(request.resource.data.payload.groupId).memberIds
+               // ...and the owner's own access is implicit, so never themselves.
+               && userId != request.auth.uid
+               && request.resource.data.payload.groupName is string
+               && groupData(request.resource.data.payload.groupId).name
+                    == request.resource.data.payload.groupName
+               && request.resource.data.payload.carName is string
+               && request.resource.data.payload.carName.size() > 0
+               // CAR_TEXT_MAX_LENGTH (40) for a nickname, or brand + ' ' +
+               // model at 40 + 1 + 40. See carDisplayName in model/Car.ts.
+               && request.resource.data.payload.carName.size() <= 81
+               && request.resource.data.payload.granted is bool;
+      }
+
+      /**
+       * A service crossing into due-soon or overdue. [R4]
+       *
+       * The odd one out in this block: every other notification is written by
+       * a person who just DID something. Nobody does anything here — a date
+       * passes, and whoever opens the app next notices. With no Cloud
+       * Functions in this project (a hard constraint), the client that
+       * noticed is the only thing that can write it.
+       *
+       * That makes "who may send" the interesting question, and the answer is
+       * edit on the car — checked on both ends:
+       *
+       *   sender    holds edit, so a view-only member cannot manufacture
+       *             reminders for other people;
+       *   recipient holds edit, so a reminder only ever reaches someone who
+       *             can act on it. R4 as drafted said "can view"; see the note
+       *             in spec.md for why this is narrower.
+       *
+       * Sender and recipient may be the SAME person, unlike every other type
+       * here. A car with one edit holder is the common case, and excluding
+       * the detector there would mean nobody is ever told.
+       *
+       * `carName`, `typeLabel` and `dueLabel` are bounded, not pinned: they
+       * are point-in-time display strings derived from data that legitimately
+       * changes afterwards (see isAccessChangedNotice for the same reasoning).
+       * A sender who wanted to put odd text in front of an edit-holder could
+       * simply rename the car — they hold edit on it.
+       */
+      function dueCar() {
+        return get(/databases/$(database)/documents/groups/$(request.resource.data.payload.groupId)/cars/$(request.resource.data.payload.carId)).data;
+      }
+
+      function dueCarExists() {
+        return request.resource.data.payload.carId is string
+               && request.resource.data.payload.carId.size() > 0
+               && exists(/databases/$(database)/documents/groups/$(request.resource.data.payload.groupId)/cars/$(request.resource.data.payload.carId));
+      }
+
+      // Mirrors carEdit() in the cars block and hasCarEdit() in model/Car.ts —
+      // owner, creator, or an explicit 'edit' entry. Asked here about an
+      // arbitrary uid rather than only the caller.
+      function holdsCarEdit(uid) {
+        return uid in groupData(request.resource.data.payload.groupId).memberIds
+               && (groupData(request.resource.data.payload.groupId).ownerId == uid
+                   || dueCar().createdBy == uid
+                   || (uid in dueCar().access
+                       && dueCar().access[uid] == 'edit'));
+      }
+
+      function isDueNotice() {
+        return request.resource.data.type in ['due_soon', 'overdue']
+               // [T19, I18N5] `dueDateMs` and `dueKm` are optional raw
+               // companions to `dueLabel`. They ride along so the render
+               // path can format the date in the READER's locale rather
+               // than showing the sender's stored formatting. Both are
+               // bounded numbers to prevent junk in the payload.
+               && request.resource.data.payload.keys().hasOnly(
+                    ['groupId', 'groupName', 'carId', 'carName',
+                     'typeLabel', 'dueLabel', 'dueDateMs', 'dueKm'])
+               && request.resource.data.payload.keys().hasAll(
+                    ['groupId', 'groupName', 'carId', 'carName',
+                     'typeLabel', 'dueLabel'])
+               && (!('dueDateMs' in request.resource.data.payload)
+                   || (request.resource.data.payload.dueDateMs is number
+                       && request.resource.data.payload.dueDateMs > 0))
+               && (!('dueKm' in request.resource.data.payload)
+                   || (request.resource.data.payload.dueKm is int
+                       && request.resource.data.payload.dueKm >= 0
+                       && request.resource.data.payload.dueKm <= 10000000))
+               && dueCarExists()
+               // Both ends hold edit. Sender and recipient may coincide.
+               && holdsCarEdit(request.auth.uid)
+               && holdsCarEdit(userId)
+               && request.resource.data.payload.groupName is string
+               && groupData(request.resource.data.payload.groupId).name
+                    == request.resource.data.payload.groupName
+               && request.resource.data.payload.carName is string
+               && request.resource.data.payload.carName.size() > 0
+               // Same bound as isAccessChangedNotice: nickname (40), or
+               // brand + ' ' + model at 40 + 1 + 40.
+               && request.resource.data.payload.carName.size() <= 81
+               && request.resource.data.payload.typeLabel is string
+               && request.resource.data.payload.typeLabel.size() > 0
+               // The log `type` bound, which is what a custom label becomes.
+               && request.resource.data.payload.typeLabel.size() <= 40
+               // "Due by 15 Aug 2026 or at 52,000 km" — a formatted date and a
+               // number, with room for longer locale date formats.
+               && request.resource.data.payload.dueLabel is string
+               && request.resource.data.payload.dueLabel.size() > 0
+               && request.resource.data.payload.dueLabel.size() <= 120;
+      }
+
+      allow read: if isOwnSubtree();
+
+      // Marking read. `read` is the only field that may ever change, so the
+      // text of a delivered notification is immutable.
+      allow update: if isOwnSubtree()
+                    && request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(['read'])
+                    && request.resource.data.read is bool;
+
+      // Own items only. Phase 1 has no delete UI; this exists so a user is
+      // never stuck with their own data.
+      allow delete: if isOwnSubtree();
+
+      // Every type shares the envelope; each then has to match exactly one
+      // shape. A type outside this list has no shape at all and is refused.
+      allow create: if isSignedIn()
+                    && isWellFormedEnvelope()
+                    && (
+                         (isNamedGroupPayload()
+                          && (isJoinRequestNotice() || isOwnerDecisionNotice()))
+                         || isGroupRenamedNotice()
+                         || isAccessChangedNotice()
+                         || isDueNotice()
+                       );
+    }
+
+    // --- Default deny.
+    // Phase 1 only writes users/{uid}; groups, joinRequests and notifications
+    // arrive in T4-T7 and each need their own match block before they work.
+    // This block is what a missing rule falls through to.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

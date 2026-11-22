@@ -1,0 +1,20 @@
+/**
+ * Invitation screen. [G3, G4, Item 4]
+ *
+ * Page shell from styles/app-shell.css; the QR and copy rows are styled by
+ * InvitePanel.css, which is shaped for this screen now that it's no longer one
+ * panel among several.
+ */
+
+.invite-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.invite-head-group {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-subtle);
+    overflow-wrap: anywhere;
+}

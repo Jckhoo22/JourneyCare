@@ -1,0 +1,213 @@
+/**
+ * Shared dialog shell. [Parts shelf redesign, Modal shell fix]
+ *
+ * Two variants, one shell. The base rule is the mobile sheet (dialog fills
+ * the viewport, body flex-grows so the footer pins bottom); the ≥640px
+ * media query rewrites it into a desktop centred card.
+ *
+ * ── The desktop centring bug this fixes ─────────────────────────────────
+ * `inset: 0; margin: auto; height: auto; max-height: X` looks like it
+ * should centre a fixed-positioned dialog with a max-height cap. It
+ * doesn't. Per CSS 2.1 §10.6.4, when top and bottom are both pinned and
+ * height is auto, auto margins resolve to 0 and the element stretches to
+ * fill the viewport (clamped to max-height). No centring, and the panel
+ * stretches down to leave a big empty band beneath the footer.
+ *
+ * We use `top: 50%; left: 50%; transform: translate(-50%, -50%)` on
+ * desktop instead. It's dimension-independent and always centres.
+ *
+ * ── Body flex behaviour ─────────────────────────────────────────────────
+ * Mobile sheet:  body has `flex: 1 1 0` so it fills the space between
+ *                the header and the pinned footer.
+ * Desktop card:  body has `flex: 0 1 auto` so it hugs its content. That
+ *                is what lets the panel hug content too — with flex: 1
+ *                the body would stretch to whatever height the shell had
+ *                and re-introduce the dead-space band.
+ *
+ * `min-height: 0` + `overflow-y: auto` mean a body taller than the
+ * 85vh-capped panel scrolls internally while the header and footer stay
+ * visible. Documented as an intentional scroll container in
+ * `src/styles/layout.invariants.test.ts`.
+ */
+
+.app-modal {
+    /* Kill UA styling that would otherwise pad and border the dialog. */
+    padding: 0;
+    border: 0;
+    background: transparent;
+    max-width: none;
+    max-height: none;
+    color: var(--color-text);
+
+    /* Default: mobile sheet, full viewport. */
+    inset: 0;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+}
+
+.app-modal::backdrop {
+    background-color: rgb(0 0 0 / 0.4);
+    animation: app-modal-fade 0.12s ease-out;
+}
+
+@media (min-width: 640px) {
+    .app-modal {
+        /* Desktop: transform-centred card. `inset: auto` releases the
+           mobile top:0/bottom:0 pinning that would otherwise stretch us;
+           top/left 50% + translate does the centring in a way that
+           respects a content-sized height. */
+        inset: auto;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+        width: min(
+            var(--modal-max-width, 28rem),
+            calc(100vw - var(--space-6) * 2)
+        );
+        height: auto;
+        max-height: 85vh;
+        max-height: 85dvh;
+        border-radius: var(--radius-card);
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+        box-shadow: var(--shadow-toast);
+        animation: app-modal-rise 0.14s ease-out;
+    }
+}
+
+/* ── Shell — flex-col wrapper for header / body / footer ──────────────── */
+.app-modal-shell {
+    /* Fills whatever height the dialog resolved to (100dvh on mobile,
+       content-sized-capped-at-85dvh on desktop). */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+}
+
+/* ── Header ───────────────────────────────────────────────────────────── */
+.app-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: calc(var(--space-3) + var(--safe-top)) var(--space-4)
+        var(--space-3);
+    border-bottom: 1px solid var(--color-border-subtle);
+    flex-shrink: 0;
+}
+
+.app-modal-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-title);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    line-height: var(--leading-tight);
+}
+
+.app-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--tap-min);
+    height: var(--tap-min);
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+.app-modal-close:hover:not(:disabled) {
+    background-color: var(--color-surface-muted);
+    color: var(--color-text);
+}
+.app-modal-close:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.app-modal-close:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* ── Body ─────────────────────────────────────────────────────────────── */
+.app-modal-body {
+    /* Mobile sheet: body fills the space between header and footer so the
+       footer sits at the viewport bottom. See the desktop override below
+       for the "hug content" behaviour that keeps the panel from stretching. */
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.app-modal-body-flush {
+    /* Callers that want their content edge-to-edge (PhotoEditor's dark
+       crop stage) opt out of the body's default padding and column gap. */
+    padding: 0;
+    gap: 0;
+}
+
+@media (min-width: 640px) {
+    .app-modal-body {
+        /* Desktop: body hugs its content — that's what makes the panel
+           hug the header + body + footer. flex-grow: 0 is the key
+           change vs. the mobile rule. */
+        flex: 0 1 auto;
+    }
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+.app-modal-foot {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4)
+        calc(var(--space-3) + var(--safe-bottom));
+    border-top: 1px solid var(--color-border-subtle);
+    background-color: var(--color-surface);
+}
+
+@media (min-width: 640px) {
+    .app-modal-foot {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: var(--space-3);
+    }
+}
+
+@keyframes app-modal-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes app-modal-rise {
+    from {
+        opacity: 0;
+        transform: translate(-50%, calc(-50% + 6px));
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .app-modal,
+    .app-modal::backdrop {
+        animation: none;
+    }
+}

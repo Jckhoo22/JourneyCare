@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <!-- viewport-fit=cover is what makes env(safe-area-inset-*) resolve to
+         real values on a notched iPhone; without it they're always 0 and the
+         top bar sits under the notch. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <!-- Matches --color-page. The browser chrome should disappear into the
+         app background, not frame it in orange. -->
+    <meta name="theme-color" content="#fafaf9" />
+    <meta
+      name="description"
+      content="Journey Care — track car maintenance and budgets with the people you share a car with."
+    />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Journey Care</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

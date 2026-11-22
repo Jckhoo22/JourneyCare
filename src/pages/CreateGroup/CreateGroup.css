@@ -1,0 +1,19 @@
+/* Create-group screen [G1]. Page shell (container, blobs, card, icon,
+   title, subtitle, page-level back link, desktop card sizing, sentence-case
+   labels) comes from `components/app_shell/CardShell.{tsx,css}` and its
+   auth-shell base. This file is only the one thing the shell doesn't cover:
+   the hint sentence under the name field. */
+
+/* Sits under the name field, above the submit — a short sentence so the
+   button label doesn't have to explain the action. Negative top margin
+   pulls it up against the field, since AuthTextField already lays down
+   space-4 of its own below. [UX tidy pass] */
+.create-group-hint {
+    margin: calc(var(--space-2) * -1) 0 var(--space-4) 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+/* Retired: `.create-group-footer` — the bottom-centred BackLink wrapper.
+   BackLink is now a CardShell prop and renders page-level top-left. */

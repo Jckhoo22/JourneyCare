@@ -1,0 +1,276 @@
+/**
+ * Journey Care design tokens.
+ *
+ * The single place colour, type, spacing, radius and control sizing are
+ * decided. Components reference var(--…); no raw hex should appear outside
+ * this file. (Three exceptions, all deliberate and all documented where they
+ * live: the Google "G" mark's brand colours, and the QR code's pure black on
+ * pure white — styling a QR to match a theme is the fastest way to make it
+ * unscannable.)
+ *
+ * ── Mobile first ──────────────────────────────────────────────────────────
+ * Every value here is the PHONE value. The one media query at the bottom
+ * scales a handful of them UP for wider viewports. Nothing scales down, so a
+ * 375px screen never inherits a desktop measurement it can't afford.
+ *
+ * ── Two accent sets ───────────────────────────────────────────────────────
+ * The accent lives in ONE block below, and a second set overrides just that
+ * block under `:root[data-theme="mono"]`. Nothing else in the file — and
+ * nothing at all in any component stylesheet — knows which is active.
+ *
+ *     default            deep teal
+ *     ?theme=mono        near-monochrome (black primaries, status colours only)
+ *
+ * `src/utils/theme.ts` sets the attribute from the URL or localStorage before
+ * the first paint, so both can be compared on the same deployed build.
+ *
+ * If a screen ever needs a colour edit to follow a theme change, that screen
+ * has a leftover hardcode. Fix the wiring here; don't patch the screen.
+ */
+
+:root {
+    /* ═══ ACCENT — deep teal (default) ═════════════════════════════════════
+       The accent's whole job: primary buttons, active states, links, focus
+       rings, and the leading edge that marks "yours" or "unread". Nothing
+       else. `-soft` is a barely-there tint for logo chips and badges.
+
+       Contrast: --color-on-primary (#fff) on --color-primary (#0F766E) is
+       5.47:1 — WCAG AA for normal text, and comfortably AA for large. */
+    --color-primary: #0f766e;
+    --color-primary-active: #115e59;
+    --color-primary-soft: #f0fdfa;
+    --color-primary-ring: rgba(15, 118, 110, 0.14);
+    /* The accent as a real, visible tint. `-soft` (#f0fdfa) is so pale it reads
+       as white on most screens — fine for the small logo chip, useless as a
+       backdrop for an illustration or a section chip. `-tint` sits at a level
+       the eye actually registers as teal, and it is DECORATIVE ONLY: nothing
+       in this app places text on it, so the accent-on-tint contrast pair is
+       deliberately not asserted by tokens.contrast.test.ts. Reach for it
+       whenever you want the accent to feel present without shouting. */
+    --color-accent-tint: #e6f4f2;
+    /* Removed in the T16 sweep: -strong, -dark and -border. `-strong` was
+       described here as a "historical alias several stylesheets still say" —
+       and by T16 none of them did. A token nothing reads is a value that can
+       drift out of contrast compliance with nobody noticing, and the contrast
+       test only checks tokens that are actually used. */
+
+    /* Text and icons ON the accent. A token rather than a bare #fff so a
+       future accent light enough to need dark text is one line, not eleven. */
+    --color-on-primary: #ffffff;
+    /* Text on a dark neutral surface — the offline banner, the scanner
+       overlay. Distinct from on-primary because they can diverge. */
+    --color-on-inverse: #ffffff;
+
+    /* The background wash. TWO temperatures now — a teal top blob and a warm
+       sand bottom blob — at alphas the eye actually registers, so the page
+       reads as paper with a hand-finished tint rather than as pure white.
+       Named by role, not by hue, so a theme can pick whatever colours suit it. */
+    --color-wash-1: rgba(15, 118, 110, 0.12);
+    --color-wash-2: rgba(217, 180, 120, 0.10);
+
+    /* ═══ NEUTRALS — shared by both accent sets ════════════════════════════ */
+
+    /* Surfaces. The page is warm paper (#faf9f6, not stone-50) so the cards
+       above it feel like they're sitting on something rather than fading
+       into a cool grey. The card stays pure white — the paired warmth vs
+       white is what makes the card feel lifted without needing a shadow to
+       do the whole job. */
+    --color-page: #faf9f6;
+    --color-surface: #ffffff;
+    --color-surface-muted: #f5f5f4;
+    --color-surface-hover: #f5f5f4;
+
+    /* Borders — hairlines */
+    --color-border: #e7e5e4;
+    --color-border-subtle: #efedec;
+    --color-border-strong: #d6d3d1;
+
+    /* Text — neutral grey ramp.
+
+       The bottom two steps are closer together than they look like they should
+       be, and deliberately. `--color-text-faint` was stone-400 (#a8a29e), which
+       is 2.5:1 on white — it failed WCAG AA outright, and it was carrying real
+       13px text: timestamps, joined-on dates, "no one is waiting right now".
+       Anything light enough to read as a distinctly fainter grey fails; 4.5:1
+       lands around here whatever hue you pick. So the last two steps are close,
+       and the hierarchy below `-subtle` comes from size and weight instead of
+       from a grey nobody can read. Caught by tokens.contrast.test.ts. */
+    --color-text: #1c1917;
+    --color-text-body: #44403c;
+    --color-text-muted: #57534e;
+    --color-text-subtle: #6b645f;
+    --color-text-faint: #79726d;
+    --color-text-toast: #1c1917;
+    --color-text-icon: #79726d;
+    --color-text-icon-hover: #44403c;
+
+    /* ═══ STATUS — never themed ════════════════════════════════════════════
+       These carry meaning, so they are identical in both accent sets and are
+       chosen to stay legible as status when the accent moves.
+
+       `--color-success` is green-700, NOT the emerald it used to be: emerald
+       sits about 15° from the teal accent and the two read as the same colour
+       at badge size. A status colour that can be mistaken for the accent has
+       stopped doing its job. [Theme swap] */
+    --color-error: #dc2626;
+    --color-error-text: #b91c1c;
+    --color-error-surface: #fef2f2;
+    /* A soft red hairline, distinct from the strong grey `--color-border-strong`
+       that `.app-btn-danger` uses. Reserved for the "cautionary" tier of
+       action — a step below Delete's outright danger. Sign-out is the first
+       caller; anything with a comparable "confirm you meant this, but nothing
+       will be lost" shape should reach for it too. */
+    --color-error-border: #fecaca;
+    --color-success: #15803d;
+    --color-success-surface: #f0fdf4;
+    --color-info: #1d4ed8;
+    /* Due-soon amber. Defined now so T13 has a token to reach for rather than
+       a reason to invent a hardcode. [R2] */
+    --color-warning: #b45309;
+    --color-warning-surface: #fffbeb;
+
+    /* ═══ SHAPE ════════════════════════════════════════════════════════════ */
+
+    /* Radii — reduced */
+    --radius-card: 16px;
+    --radius-field: 10px;
+    --radius-button: 10px;
+    --radius-pill: 999px;
+    --radius-toast: 10px;
+    --radius-sm: 8px;
+
+    /* Shadows. Cards regain a gentle two-layer shadow — a hairline shadow
+       right at the card edge, plus a soft cast a few pixels below — so a
+       list of cards no longer relies on hairline borders alone to separate
+       itself from the page. The border stays, softened to `-subtle`, so the
+       edge is still crisp on high-DPI screens where shadows can look muddy.
+       -toast and the scanner overlay were already earning their shadows and
+       don't change. */
+    --shadow-card: 0 1px 3px rgba(28, 25, 23, 0.06),
+        0 4px 12px -4px rgba(28, 25, 23, 0.05);
+    /* Buttons get a small tint-coloured shadow so the primary sits half a
+       millimetre off the page. `.app-btn-primary:active` removes it and
+       nudges down 1px — physical feedback without a colour change. */
+    --shadow-button: 0 1px 2px rgba(15, 118, 110, 0.25);
+    /* -tab and -fab went in the T16 sweep with the tab bar and the floating
+       action button they were named for, neither of which this app has. */
+    --shadow-toast: 0 8px 24px -6px rgba(28, 25, 23, 0.18);
+    --shadow-raised: 0 1px 2px rgba(28, 25, 23, 0.04);
+
+    /* ═══ TYPE — two faces, tight scale ════════════════════════════════════
+       Body/UI stays on the system stack so first paint is instant and offline
+       browsers get something familiar. The DISPLAY face — Bricolage Grotesque
+       Variable, bundled via @fontsource, no runtime network — is reached for
+       by h1s, section headings, empty-state headlines and big numbers only.
+       That is where personality earns its keep; everywhere else it would tax
+       reading. Body sits at 16px and inputs must never go below it: anything
+       smaller makes iOS Safari zoom the page on focus. */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        Helvetica, Arial, sans-serif;
+    --font-display: "Bricolage Grotesque Variable", -apple-system,
+        BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    --text-display: 1.75rem;  /* page h1, hero numbers         — 28px */
+    --text-title: 1.125rem;   /* card / section heading        — 18px */
+    --text-body: 1rem;        /* body copy, inputs, buttons    — 16px */
+    --text-sm: 0.9375rem;     /* secondary copy                — 15px */
+    --text-xs: 0.8125rem;     /* metadata, timestamps          — 13px */
+    --text-label: 0.75rem;    /* uppercase field labels        — 12px */
+
+    --leading-tight: 1.25;
+    --leading-normal: 1.5;
+    --leading-loose: 1.65;
+
+    --weight-normal: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+
+    --tracking-tight: -0.015em;
+    --tracking-wide: 0.06em;
+
+    /* ═══ SPACING — 8px grid (4px half-step) ═══════════════════════════════ */
+    --space-1: 0.25rem;   /*  4px */
+    --space-2: 0.5rem;    /*  8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.25rem;   /* 20px */
+    --space-6: 1.5rem;    /* 24px */
+    --space-8: 2rem;      /* 32px */
+    --space-10: 2.5rem;   /* 40px */
+    --space-12: 3rem;     /* 48px */
+
+    /* Gutter between content and the screen edge. 20px on a phone — enough to
+       breathe without spending width a 375px screen doesn't have. */
+    --page-padding: 20px;
+    --page-max: 72rem;
+    --form-max: 40rem;
+    --auth-max: 28rem;
+
+    /* ═══ CONTROLS ═════════════════════════════════════════════════════════
+       48px clears the 44px minimum touch target with room to spare, and
+       normalises button/input heights that used to drift apart. */
+    --control-height: 48px;
+    --tap-min: 44px;
+
+    /* ═══ iOS SAFE AREAS ═══════════════════════════════════════════════════
+       Zero on every other device, so these are safe to add unconditionally. */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+}
+
+/**
+ * ═══ ACCENT SET 2 — near-monochrome ════════════════════════════════════════
+ *
+ * No accent hue at all: primaries are near-black, and the only colour left in
+ * the interface is status. The quietest the app can get while still saying
+ * "this is the button" and "this is unread".
+ *
+ * Note this overrides ONLY the accent block. Neutrals, status, type, spacing
+ * and shape are shared — which is the point: swapping the accent is a
+ * ten-line diff, not a redesign.
+ *
+ * Contrast: #fff on #1c1917 is ~17:1 — AAA at any size.
+ */
+:root[data-theme="mono"] {
+    --color-primary: #1c1917;
+    --color-primary-active: #0c0a09;
+    --color-primary-soft: #f5f5f4;
+    --color-primary-ring: rgba(28, 25, 23, 0.16);
+    /* Same role as the teal `-tint`: a real, visible decorative wash. Warm
+       stone rather than pure grey so the mono theme still feels papery
+       rather than clinical. Never carries text. */
+    --color-accent-tint: #ececea;
+
+    --color-on-primary: #ffffff;
+    --color-on-inverse: #ffffff;
+
+    /* Neutral wash at the SAME visible strength as the teal set — the mono
+       theme must not be left behind on depth. The stone hue keeps hue out of
+       the picture; alphas match --color-wash-1/-2 in the teal set. */
+    --color-wash-1: rgba(87, 83, 78, 0.10);
+    --color-wash-2: rgba(120, 113, 108, 0.08);
+
+    /* Neutral-tinted button shadow — the accent's tint would leak teal into
+       a monochrome theme. Same subtle presence, no hue. */
+    --shadow-button: 0 1px 2px rgba(28, 25, 23, 0.18);
+}
+
+/* ─── Scale UP for tablets and desktops ────────────────────────────────────
+   Only the values that genuinely benefit from more room. Everything else
+   stays exactly as the phone has it. */
+@media (min-width: 600px) {
+    :root {
+        --text-display: 2.125rem; /* 34px */
+        --text-title: 1.25rem;    /* 20px */
+        --page-padding: 24px;
+    }
+}
+
+@media (min-width: 760px) {
+    :root {
+        --page-padding: var(--space-8);
+    }
+}

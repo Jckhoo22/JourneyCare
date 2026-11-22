@@ -1,0 +1,70 @@
+/**
+ * Destination-labelled back link. [Polish item 2]
+ *
+ * One shape used across every detail page: `← {parent name}`. Teal accent so
+ * the tap target reads as tappable at a glance, regular weight so it doesn't
+ * compete with the h1 that follows it, ≥44px tall via padding so a fat
+ * finger clears it.
+ *
+ * The negative margins align the arrow with the page gutter without pulling
+ * the padding out of the tap surface — same trick the old `.app-back` used,
+ * kept here so a page that swaps in this component doesn't shift.
+ */
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    align-self: flex-start;
+    max-width: 100%;
+    min-height: var(--tap-min);
+    margin: calc(var(--space-3) * -1) 0 calc(var(--space-4) * -1)
+        calc(var(--space-2) * -1);
+    padding: var(--space-3) var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color 0.15s;
+    /* The smart-back variant renders as a <button> (calls navigate(-1)
+       instead of pushing a URL). These resets keep it visually identical
+       to the <a> rendering — no browser button chrome, no baseline shift. */
+    background: none;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+.back-link:hover {
+    color: var(--color-primary-active);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+.back-link:active {
+    color: var(--color-primary-active);
+}
+
+/* Truncates a long parent name mid-line rather than wrapping onto a second
+   row that would push the h1 down. */
+.back-link-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.back-link > svg {
+    flex-shrink: 0;
+}
+
+/* When the back link sits inside a centred footer (the auth-shell forms
+   still on the old chrome — AddCar / AddLog / EditCar), the negative
+   gutter margins above would push it off-centre. Reset them in those
+   contexts. Same visual style, just no gutter-alignment.
+
+   CreateGroup, JoinGroup, and JoinWithCode all render their back link
+   via CardShell's `backLink` prop — the shell's own scope zeros these
+   margins, so nothing here applies to them. */
+.auth-footer .back-link {
+    margin: 0;
+}

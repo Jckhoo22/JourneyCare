@@ -1,0 +1,135 @@
+/**
+ * Photo crop / rotate editor — INNER content only. [Cropper redesign,
+ * Modal shell fix]
+ *
+ * The dialog shell (backdrop, sheet-on-phone, centred-card-on-desktop,
+ * header + close X + footer) lives in `components/ui/Modal.css`. This
+ * file owns only what sits INSIDE Modal's body: the dark crop stage and
+ * the tools row.
+ *
+ * Modal.body renders in `flush` mode for this component — no padding,
+ * no column gap — so the dark stage can sit edge-to-edge inside the
+ * card's rounded corners.
+ */
+
+.photo-editor-content {
+    display: flex;
+    flex-direction: column;
+    /* Fill Modal's body on both variants. On mobile the body is `flex: 1`
+       and we consume it here so the tools row pins to the footer's edge;
+       on desktop the body hugs content and this rule becomes a no-op. */
+    flex: 1;
+    min-height: 0;
+    transition: opacity 0.15s;
+}
+
+/* While saving: dim the stage + tools so the primary Save's spinner is
+   the visible locus of activity. */
+.photo-editor-content-busy .photo-editor-stage,
+.photo-editor-content-busy .photo-editor-tools {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* ── Cropper stage ──────────────────────────────────────────────────────
+   react-easy-crop positions itself absolute inside its parent, so the
+   parent has to be sized. On mobile the stage `flex: 1` and eats the
+   space between the header and the tools row. On desktop we cap the
+   height so the crop stays a reasonable read size in the contained
+   card — the cropper still fills what's given. The dark surround only
+   lives here, confined to the stage. */
+.photo-editor-stage {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    background-color: #111827;
+}
+
+@media (min-width: 640px) {
+    .photo-editor-stage {
+        /* 16:9 lock means a 640-wide stage renders at ~360 tall for the
+           image area itself; the cropper adds a bit of surround for the
+           dim overlay. 60dvh caps it on tall desktop screens and lets
+           the card breathe below. */
+        height: min(60dvh, 480px);
+        flex: 0 0 auto;
+    }
+}
+
+/* ── Tools row ──────────────────────────────────────────────────────────
+   Slim row under the stage. Rotate on the left, then the zoom group
+   (− / slider / +) filling the remaining width. On a phone the row stays
+   the same shape — a slider handles fine at 44px height, and Rotate is
+   the same 36px icon target on both viewports. */
+.photo-editor-tools {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    border-top: 1px solid var(--color-border-subtle);
+    background-color: var(--color-surface);
+    flex-shrink: 0;
+}
+
+.photo-editor-zoom {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1;
+    min-width: 0;
+}
+
+/* Icon buttons: rotate on the row's left, ± on the slider's ends. Same
+   36px square treatment so the row reads as one control group. */
+.photo-editor-tool {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-field);
+    color: var(--color-text-body);
+    cursor: pointer;
+    transition:
+        background-color 0.15s,
+        border-color 0.15s,
+        color 0.15s;
+}
+.photo-editor-tool:hover:not(:disabled) {
+    background-color: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+}
+.photo-editor-tool:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.photo-editor-tool:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* Range slider — teal accent, thin track, comfortable thumb. The
+   accent-color property covers Chromium/Firefox/Safari and gives a
+   single-line theme hook. The explicit thumb size on Chromium keeps the
+   target ≥16px even though the track is thin. */
+.photo-editor-zoom-slider {
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
+}
+.photo-editor-zoom-slider:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.photo-editor-zoom-slider:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-field);
+}

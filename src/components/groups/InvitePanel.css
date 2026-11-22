@@ -1,0 +1,120 @@
+/**
+ * Owner-only invite content. [G3, G4, Invite polish]
+ *
+ * The QR is the point of this screen — someone is holding a second phone up
+ * to it — so it gets as much width as the viewport will give, plain black
+ * on white, with the quiet zone the spec requires.
+ *
+ * The old "OR ENTER THIS CODE" chunk-display + copy button are gone (the
+ * link covers the no-camera path). The row that DID show the URL is now a
+ * display-only truncated code; the action row below carries a solid
+ * Share (mobile) or Copy (desktop) primary through the shared <Button>.
+ */
+
+.invite-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.invite-body {
+    margin: 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+/* ── QR ─────────────────────────────────────────────────────────────────────
+   Rendered at 288px, scaled here — sharp at any size. `display: block` on
+   the svg kills the inline-baseline gap underneath. */
+.invite-qr {
+    align-self: center;
+    width: 100%;
+    max-width: 288px;
+    line-height: 0;
+}
+
+.invite-qr svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.invite-qr-hint {
+    margin: calc(var(--space-4) * -1) 0 0 0;
+    text-align: center;
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+}
+
+.invite-missing {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--color-error-surface);
+    border-radius: var(--radius-field);
+    font-size: var(--text-sm);
+    line-height: var(--leading-loose);
+    color: var(--color-error-text);
+}
+
+/* ── Link display ──────────────────────────────────────────────────────────
+   The row used to carry the URL AND a copy icon-button. The action moved
+   out to the button row below; this row is display only. Small label +
+   truncated URL as a monospaced pill. */
+.invite-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+/* Sentence-case label, matching Settings / Join. The old caps eyebrow read
+   as a form-field label; this row isn't a field. */
+.invite-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-subtle);
+}
+
+/* Muted monospace pill — display only. Full URL sits behind the `title`
+   attribute for a desktop hover, and behind the Share / Copy buttons for
+   everyone else. `nowrap` + `ellipsis` matters even though the shown
+   string is short: on ultra-narrow phones the host name can still overflow. */
+.invite-value {
+    padding: var(--space-3);
+    background-color: var(--color-surface-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-field);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+    color: var(--color-text-body);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Actions ────────────────────────────────────────────────────────────────
+   Share (mobile) sits on top as solid teal, Copy underneath as outline. On
+   desktop the Share button doesn't render at all — Copy IS the primary and
+   is the only button here.
+   Stacked on a phone, side-by-side on ≥600px so the two share the row when
+   there's air. */
+.invite-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+@media (min-width: 600px) {
+    .invite-actions {
+        flex-direction: row;
+        align-items: center;
+    }
+    .invite-actions > .app-btn {
+        flex: 1;
+    }
+}

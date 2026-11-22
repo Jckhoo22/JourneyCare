@@ -1,0 +1,468 @@
+/**
+ * People card — roster of expandable member panels.
+ *
+ * The card is a compact roster by default: one row per member holding an
+ * initials avatar, the name, a live access summary, and a chevron. Tapping
+ * a row expands ITS OWN panel underneath; one panel is open at a time.
+ *
+ * ── The expanded panel body ──────────────────────────────────────────────
+ * Sits inside a subtly inset gray container (bg = --color-surface-muted,
+ * rounded) that spans the full width of the card body. Every control —
+ * "Can add cars", "Can edit all cars", the per-car list — lays out as
+ * label-left / switch-right rows sharing one left edge and one right
+ * edge. A hairline divider closes the container above the right-aligned
+ * "Remove member" danger button.
+ *
+ * The old nested per-car disclosure was removed in the Members redesign:
+ * groups are small, and hiding cars behind a second collapsible inside an
+ * already-open panel meant the reader had to think in two levels to see
+ * an access flag. See PeoplePanel.tsx for the summary derivation and the
+ * write logic (both unchanged).
+ */
+
+.people-panel {
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.people-body {
+    margin: 0 0 var(--space-3) 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-subtle);
+    line-height: var(--leading-normal);
+}
+
+/* ── Roster ─────────────────────────────────────────────────────────────── */
+.people-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.people-item {
+    border-top: 1px solid var(--color-border-subtle);
+}
+.people-item:first-child {
+    border-top: none;
+}
+
+/* ── Row ───────────────────────────────────────────────────────────────────
+   The collapsed row is the identity line. Two shapes share the class:
+
+     .people-row                    → common layout (avatar + name + summary
+                                      + chevron slot)
+     .people-row-toggle             → member row, rendered as a <button>
+                                      that expands the panel below
+     .people-row-static             → owner row, rendered as a <div>; no
+                                      chevron, no panel below
+
+   Height ≥48px on mobile / ≥56px on desktop — tap targets never shrink. */
+.people-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 48px;
+    padding: var(--space-2) 0;
+    background: none;
+    border: none;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+}
+
+.people-row-toggle {
+    cursor: pointer;
+    transition: background-color 0.15s;
+    /* Slight horizontal padding so a hover tint reaches past the name.
+       Kept small so the row still aligns with the card body's padding. */
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
+    margin: 0 calc(var(--space-1) * -1);
+    border-radius: var(--radius-field);
+}
+.people-row-toggle:hover {
+    background-color: var(--color-surface-muted);
+}
+.people-row-toggle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (min-width: 640px) {
+    .people-row {
+        min-height: 56px;
+    }
+}
+
+/* ── Avatar ─────────────────────────────────────────────────────────────── */
+.people-avatar {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.02em;
+    user-select: none;
+}
+@media (min-width: 640px) {
+    .people-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: var(--text-sm);
+    }
+}
+
+.people-avatar-owner {
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+/* Members get a neutral bg + a hairline border to distinguish from the
+   owner chip without shouting. */
+.people-avatar-member {
+    background-color: var(--color-surface-muted);
+    color: var(--color-text-body);
+    border: 1px solid var(--color-border);
+}
+
+/* ── Identity (name + summary) ─────────────────────────────────────────────
+   Mobile stacks name / summary as two lines. Desktop lays name and summary
+   inline as one line with the summary pushed to the right of the name. */
+.people-identity {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.people-name {
+    font-size: var(--text-body);
+    font-weight: 500;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+@media (min-width: 640px) {
+    /* Inline the summary next to the name on desktop. `flex: 1` on the
+       name lets it eat the horizontal space and truncate, so the summary
+       stays legible even with a long Malay name. */
+    .people-identity {
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-3);
+    }
+    .people-identity .people-name {
+        flex: 1;
+    }
+}
+
+/* ── Summary chip ──────────────────────────────────────────────────────────
+   Every access-summary label is a pill chip — Owner, Can edit, View only,
+   Custom all share the same shape (rounded-full, text-xs, ~8/2 padding).
+   Only the color varies: Owner is the teal-tint identity chip, the three
+   derived states share a neutral gray-100 / gray-600 treatment because
+   they're annotations about state, not identity. Bare colored text used
+   to do this job and read as loose copy trailing the name; the chip
+   makes each row's access state a discrete, scannable token instead. */
+.people-summary {
+    flex-shrink: 0;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    line-height: 1.375rem;
+    letter-spacing: 0.01em;
+}
+
+.people-summary-owner {
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.people-summary-can-edit,
+.people-summary-view-only,
+.people-summary-custom {
+    background-color: var(--color-surface-muted);
+    color: var(--color-text-subtle);
+}
+
+@media (min-width: 640px) {
+    .people-row-static .people-name {
+        /* Name shrinks to content on the owner row so the chip that
+           follows sits inline right after it. */
+        flex: 0 1 auto;
+    }
+}
+
+/* ── Row chevron ─────────────────────────────────────────────────────────── */
+.people-row-chevron {
+    flex-shrink: 0;
+    color: var(--color-text-icon);
+    transition: transform 0.15s;
+    margin-left: var(--space-2);
+}
+.people-row-chevron-open {
+    transform: rotate(180deg);
+}
+
+/* ── Expanded panel body — the inset gray container ────────────────────────
+   Left/right edges align with the row content edges above it (the toggle
+   row's -4px margin extends its hover bg past the item edge, but the row
+   CONTENT still sits at the item edge — which is where the panel body
+   also sits). ~8px top margin separates it from the row so the panel
+   reads as attached to that row, not as a full section break. Uniform
+   12px padding all around; the earlier 16px horizontal reading was
+   loose. Every child sits at the container's padding, so labels share
+   one left edge and switches share one right edge. `border-radius` on
+   all four corners because the panel is a discrete inset container, not
+   a bottom-cap on the row.
+
+   `gap: 0` on purpose — each section (perms / percar / actions) carries
+   its OWN top spacing via margin-top + a border-top divider where a
+   divider belongs. A container-level gap here would double up with those
+   spacings and pad every seam. */
+.people-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: var(--space-2) 0 var(--space-3) 0;
+    padding: var(--space-3);
+    background-color: var(--color-surface-muted);
+    border-radius: var(--radius-sm);
+}
+
+/* ── Permissions block inside the panel ────────────────────────────────────
+   The two `layout="split"` toggles sit at 44px each — WCAG's tap-target
+   minimum, capped so a hint line doesn't stretch a row taller than its
+   neighbour and break the settings-list rhythm. Rows share one left edge
+   (the container's own padding) and one right edge (same). No internal
+   max-width — the switch anchors the right edge and the label fills the
+   space, which is the whole point of `split`. */
+.people-perms {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* Cap the .toggle default so a rare two-line hint can't stretch a row
+   taller than 44px and break the settings-list rhythm — the whole row is
+   the tap target, so the switch alone doesn't need any more vertical room
+   than that. */
+.people-perms .toggle,
+.people-percar .toggle {
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0;
+}
+
+.people-static {
+    margin: 0;
+    min-height: 44px;
+    max-height: 44px;
+    display: flex;
+    align-items: center;
+    font-size: var(--text-sm);
+    color: var(--color-text-subtle);
+}
+
+.people-static-locked {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--color-text-muted);
+}
+
+.people-nocars {
+    margin: 0;
+    min-height: 44px;
+    max-height: 44px;
+    display: flex;
+    align-items: center;
+    font-size: var(--text-xs);
+    color: var(--color-text-faint);
+    font-style: italic;
+}
+
+/* ── Per-car section (no collapsible in the redesign) ────────────────────
+   The section's own margin-top of 0 lets the label's border-top serve as
+   the divider. The label carries the full "divider + label" spacing on
+   itself:
+     • margin-top: var(--space-2)   → 8px of quiet ABOVE the divider line
+     • border-top                   → the divider itself
+     • padding-top: var(--space-2)  → 8px between the divider and the label
+     • margin-bottom: var(--space-1) → 4px between the label and the list
+   That's the "divider my-2" + "label mt-2 mb-1" reading in one element,
+   with no double-counting from a container-level flex gap. */
+.people-percar {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.people-percar-label {
+    margin: var(--space-2) 0 var(--space-1) 0;
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+}
+
+/* Per-car rows share the same left/right edges as the toggles above —
+   both live inside the same padded container. */
+.people-cars {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.people-car {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0;
+}
+
+.people-car-name {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-body);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.people-access-locked {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0 var(--space-2);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    line-height: 1.375rem;
+    color: var(--color-text-muted);
+}
+
+/* Read-only per-car state — sentence case. */
+.people-access-state {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-faint);
+}
+.people-access-state-on {
+    color: var(--color-primary);
+}
+
+/* ── Remove member action (bottom of the inset container) ────────────────
+   Small ghost-danger button, right-aligned, sitting under a hairline
+   divider so the destructive action reads as a discrete step rather than
+   as one more setting in the list. Not a bare link — the button shape
+   makes the tap target legible.
+
+   The panel body has `gap: 0`, so `margin-top: var(--space-2)` is real
+   space above the divider (8px), not additive with a gap. Padding is
+   top-only: `var(--space-2)` between the divider and the button, and
+   `0` below — the button's bottom edge relies on the panel body's own
+   `padding: var(--space-3)` (12px) to sit 12px from the panel bottom,
+   rather than being wrapped in a padded band that would push it further
+   in and give the destructive action its own gray sub-strip. */
+.people-panel-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-2);
+    padding: var(--space-2) 0 0 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.people-remove {
+    min-height: 32px;
+    padding: 0 var(--space-3);
+    background-color: transparent;
+    border: 1px solid var(--color-error);
+    border-radius: var(--radius-button);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-error-text);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+.people-remove:hover:not(:disabled) {
+    background-color: var(--color-error-surface);
+    color: var(--color-error);
+}
+.people-remove:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.people-remove:focus-visible {
+    outline: 2px solid var(--color-error);
+    outline-offset: 2px;
+}
+
+/* ── Single-member nudge ────────────────────────────────────────────────── */
+.people-alone {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+    padding: var(--space-3);
+    background-color: var(--color-surface-muted);
+    border-radius: var(--radius-field);
+}
+
+.people-alone-text {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-subtle);
+    line-height: var(--leading-normal);
+}
+
+.people-alone-invite {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--tap-min);
+    padding: 0 var(--space-3);
+    background-color: var(--color-primary);
+    border-radius: var(--radius-field);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-on-primary);
+    text-decoration: none;
+    transition: background-color 0.15s;
+}
+.people-alone-invite:hover {
+    background-color: var(--color-primary-strong, var(--color-primary));
+}
+.people-alone-invite:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}

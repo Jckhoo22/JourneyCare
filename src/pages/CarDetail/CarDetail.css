@@ -1,0 +1,199 @@
+/**
+ * A car's own page. [C5, C8, C9, C10]
+ * Page shell, buttons and empty states come from styles/app-shell.css.
+ *
+ * The header / plate / edit chrome that used to live here moved into the
+ * hero card in the Hero redesign — see `CarPhotoPanel.css`. What remains
+ * here is page-level: the read-only note, the danger zone, and the action
+ * card that offers "Log a service" / "Log a visit" (see .car-actions).
+ *
+ * The old sticky-bottom + desktop-in-flow button pair is gone — two bare
+ * buttons floating between cards broke the page's all-card rhythm and
+ * told a first-time family member nothing about which one to tap. The
+ * replacement is `.car-actions` below: one card, two explained rows.
+ */
+
+/**
+ * The read-only note.
+ *
+ * All that is left of the details panel, and it isn't a detail — it explains
+ * why a member sees no Edit button and no way to log a service. Standalone
+ * now, so it carries its own surface rather than borrowing the card's. [C6]
+ */
+.car-readonly {
+    margin: var(--space-3) 0 0 0;
+    padding: var(--space-3);
+    background-color: var(--color-surface-muted);
+    border-radius: var(--radius-field);
+    font-size: var(--text-xs);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+/* ── Danger zone [C8] ───────────────────────────────────────────────────── */
+.car-danger {
+    margin-top: var(--space-2);
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    /* Neutral hairline like every other card — the red is spent on the label
+       and the button, where it carries meaning. */
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+}
+
+/* Sentence case since the car polish pass — the "DANGER ZONE" caps read
+   as a warning banner where a section heading was called for. Colour
+   stays the accepted error red so the section is still visually a
+   destructive island. */
+.car-danger-title {
+    margin: 0 0 var(--space-2) 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-error-text);
+}
+
+.car-danger-body {
+    margin: 0 0 var(--space-4) 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+.car-danger-prompt {
+    color: var(--color-text-body);
+    font-weight: var(--weight-medium);
+}
+
+.car-danger-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+}
+
+@media (min-width: 600px) {
+    .car-danger-actions {
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-4);
+    }
+}
+
+/**
+ * "Log a service" / "Log a visit" action card.
+ *
+ * Same visual system as `.manage-nav` on the Manage group page — one
+ * card, chevron rows with a teal-tint icon circle, verb-first title,
+ * one-line subtitle, chevron. The two pages have different owners
+ * (this one is per-car, that one is per-group) but the row grammar has
+ * to read as the same pattern, or every card in the app becomes its
+ * own idiom.
+ *
+ * These rules are duplicated rather than shared: extracting a common
+ * stylesheet would either drag `GroupManage.css` behind CarDetail's
+ * import or introduce a fresh shared file for two callers. The
+ * duplication is small, the values are all tokens, and both pages'
+ * headers call out that a divergence in one is a bug in the other.
+ */
+.car-actions {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    /* Contain the hover background so it stops at the rounded corners. */
+    overflow: hidden;
+}
+
+.car-actions-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 3.5rem; /* 56px — grows with the subtitle when it wraps
+                          on a ~390px viewport. */
+    padding: var(--space-3) var(--space-4);
+    background: none;
+    border: none;
+    border-top: 1px solid var(--color-border-subtle);
+    text-align: left;
+    text-decoration: none;
+    color: inherit;
+    font: inherit;
+    transition: background-color 0.15s;
+}
+.car-actions-item:first-child {
+    border-top: none;
+}
+
+.car-actions-link {
+    cursor: pointer;
+}
+.car-actions-link:hover {
+    background-color: var(--color-surface-muted);
+}
+.car-actions-link:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
+
+.car-actions-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-primary-soft);
+    border-radius: var(--radius-pill);
+    color: var(--color-primary);
+}
+
+.car-actions-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.car-actions-title {
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+}
+
+/* Subtitle wraps on narrow viewports rather than ellipsing — the whole
+   point of the row is the plain-language explanation, so cutting it off
+   would defeat the redesign. */
+.car-actions-hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+    line-height: var(--leading-loose);
+}
+
+.car-actions-chevron {
+    flex-shrink: 0;
+    color: var(--color-text-faint);
+    transition: transform 0.15s;
+}
+.car-actions-link:hover .car-actions-chevron {
+    transform: translateX(2px);
+}
+
+.car-overview,
+.car-overview-side {
+    display: grid;
+    align-content: start;
+    align-items: start;
+    gap: var(--space-6);
+    min-width: 0;
+}
+
+@media (min-width: 760px) {
+    .car-overview {
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    }
+}

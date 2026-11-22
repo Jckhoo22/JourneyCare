@@ -1,0 +1,128 @@
+/**
+ * Account button + menu.
+ *
+ * The menu is anchored to the button's right edge and capped so it can never
+ * push past the page gutter — on a 375px screen it has ~335px to live in, and
+ * a popover that overflows is worse than the mis-tap it was built to prevent.
+ */
+
+.account {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.account-btn {
+    width: var(--tap-min);
+    height: var(--tap-min);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-field);
+    cursor: pointer;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+.account-btn:hover,
+.account-btn[aria-expanded="true"] {
+    border-color: var(--color-border-strong);
+    background-color: var(--color-surface-muted);
+}
+
+.account-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    background-color: var(--color-primary-soft);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    line-height: 1;
+    color: var(--color-primary);
+}
+
+/* ── The menu ───────────────────────────────────────────────────────────── */
+.account-menu {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    right: 0;
+    z-index: 60;
+    min-width: 15rem;
+    /* Never wider than the page gutter allows. */
+    max-width: calc(100vw - (var(--page-padding) * 2));
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-toast);
+    overflow: hidden;
+    animation: accountMenuIn 0.12s ease-out;
+}
+
+.account-who {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.account-who-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-subtle);
+}
+
+.account-who-name {
+    font-size: var(--text-body);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.account-who-email {
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+    overflow-wrap: anywhere;
+}
+
+/* Shared by every row in the menu. Sign-out keeps its own class purely for the
+   red hover below — the geometry is the same for both. */
+.account-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: var(--control-height);
+    padding: 0 var(--space-4);
+    background: none;
+    border: none;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-body);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+.account-item:hover {
+    background-color: var(--color-surface-muted);
+}
+/* Sign out is the only row that turns red — it's the only one you can't undo
+   with the back button. */
+.account-signout:hover {
+    color: var(--color-error-text);
+}
+
+@keyframes accountMenuIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -1,0 +1,23 @@
+/* Keep the back link aligned with the centered card. */
+.card-shell-column {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: var(--auth-max);
+}
+
+.card-shell-back {
+    align-self: flex-start;
+    max-width: 100%;
+    margin-bottom: var(--space-3);
+}
+.card-shell-back .back-link {
+    margin: 0;
+}
+
+.card-shell-content .input-label {
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: var(--text-sm);
+    color: var(--color-text);
+}

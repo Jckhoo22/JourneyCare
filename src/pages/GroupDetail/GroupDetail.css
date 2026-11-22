@@ -1,0 +1,208 @@
+/**
+ * A group's cars space. [G2, UX phase-2]
+ *
+ * Page shell, back link, headings and panels all come from
+ * styles/app-shell.css. What's left here:
+ *   — the header's title row (name + owner-only Manage button) and its
+ *     summary line
+ *   — the owner-only pending-request banner that sits above What's due
+ *   — the cars list wrapper
+ *
+ * The bottom "Manage group" card that used to close the page is gone;
+ * its entry point moved into the title row so the page ends on Spending.
+ * The old .group-manage-link/.group-manage-icon/.group-manage-body/
+ * .group-manage-title/.group-manage-hint/.group-manage-badge/
+ * .group-manage-chevron classes went with it.
+ */
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.group-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+/* Title left, Manage button right. Members render no button, and the row
+   collapses to the title alone with no reserved gap. */
+.group-head-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.group-head-row .app-h1 {
+    flex: 1;
+    min-width: 0;
+    /* Long names truncate rather than push the button off-screen or wrap
+       under it. `overflow-wrap: anywhere` on .app-h1 stays, because it
+       covers the case where the title lives on its own without a sibling. */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.group-summary {
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-subtle);
+}
+
+.group-summary-dot {
+    margin: 0 var(--space-2);
+    color: var(--color-text-faint);
+}
+
+/* ── Manage button ────────────────────────────────────────────────────────
+   Quiet secondary — bordered, ~36px, muted text — so it never competes
+   with the solid Add-car below the cars list. Owner-only; the dot
+   surfaces pending join requests as a belt to the banner's suspenders. */
+.group-manage-btn {
+    flex-shrink: 0;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 36px;
+    padding: 0 var(--space-3);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-button);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-body);
+    text-decoration: none;
+    transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+.group-manage-btn:hover {
+    border-color: var(--color-border-strong);
+    background-color: var(--color-surface-muted);
+    color: var(--color-text);
+}
+
+.group-manage-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-warning);
+    /* Nudge off the "M" so the dot reads as an alert, not as punctuation
+       inside the label. */
+    margin-left: var(--space-1);
+}
+
+/* ── Pending-request banner ───────────────────────────────────────────────
+   Owner-only, above What's due when count > 0. Amber tint so the surface
+   reads as attention, not accent — a person waiting on a decision is
+   status information, and colour on this page is reserved for status. */
+.group-pending-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--tap-min);
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--color-warning-surface);
+    border: 1px solid var(--color-warning);
+    border-radius: var(--radius-card);
+    text-decoration: none;
+    color: var(--color-warning);
+    transition: background-color 0.15s;
+}
+.group-pending-banner:hover {
+    /* No token for a hover warning surface; a touch darker via alpha keeps
+       the tint honest and works across both accent sets. */
+    background-color: rgba(180, 83, 9, 0.10);
+}
+
+.group-pending-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--color-warning);
+}
+
+.group-pending-text {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-warning);
+}
+
+.group-pending-action {
+    flex-shrink: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-warning);
+    text-decoration: underline;
+}
+
+/* ── Cars list [Group polish] ─────────────────────────────────────────
+   The section is a plain muted label + a stacked list of cards. The
+   iconed section head was dropped in the Group polish pass — the count
+   was redundant with the list itself, and the icon added chrome on a
+   page whose whole point IS the cars. */
+.group-cars {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+/* "Cars" — muted, medium weight, sm size. Not a section chip and not a
+   card header; a label that quietly names the block underneath it. */
+.group-cars-label {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-title);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+}
+
+.group-cars-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+/* Add car, once cars exist [Group polish].
+   Demoted from the full-width primary button. Dashed hairline row that
+   sits at the bottom of the car list, matches the row rhythm above it
+   (72px min-height), and reads as an "add another" affordance rather
+   than the page's primary action. The prominent primary form still
+   fires at zero cars, via the EmptyState above. */
+.group-cars-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 72px;
+    padding: var(--space-3);
+    background-color: transparent;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-card);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-subtle);
+    text-decoration: none;
+    transition:
+        border-color 0.15s,
+        color 0.15s,
+        background-color 0.15s;
+}
+.group-cars-add:hover {
+    border-color: var(--color-text-subtle);
+    color: var(--color-text);
+    background-color: var(--color-surface-muted);
+}
+.group-cars-add:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (min-width: 760px) {
+    .group-cars-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    }
+}

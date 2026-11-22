@@ -1,0 +1,57 @@
+/**
+ * The background wash.
+ *
+ * These were two saturated blurred blobs. The refresh demotes them to the
+ * faintest warmth the eye can still register — the page should read as white
+ * paper, not as a gradient. The alphas that do the work live on
+ * --color-wash-1 / --color-wash-2 in tokens.css, so the "greatly reduce the
+ * gradient" decision is one token change, not a per-page edit.
+ *
+ * Named by POSITION, not by hue. They were `.blob-blue` and `.blob-orange`
+ * until the T16 sweep — names left over from an accent set this app no longer
+ * has, sitting on top of tokens that had already been renamed to roles. A
+ * class called `orange` filled with teal is a small lie that costs somebody an
+ * afternoon eventually.
+ *
+ * `pointer-events: none` matters: these sit above the page background and
+ * would otherwise swallow taps meant for content near the screen corners.
+ */
+
+.blob {
+    position: absolute;
+    width: 60%;
+    height: 40%;
+    border-radius: 50%;
+    filter: blur(140px);
+    pointer-events: none;
+    z-index: 0;
+    /**
+     * This is the desktop hover-lag fix, and it is not cosmetic.
+     *
+     * A 140px blur over a box this size is one of the most expensive raster
+     * operations on the page. Unpromoted, it lives in the same layer as the
+     * content above it, so ANY repaint overlapping it re-rasterises the blur —
+     * and every card, button and link on the app hover-transitions its
+     * border-color or background-color. One mouse movement across a list of
+     * cars meant re-blurring a 60%-by-40% region per frame, which is where the
+     * lag came from. The transitions themselves were already restricted to
+     * colour and transform; they were never the problem.
+     *
+     * `will-change: transform` puts each blob on its own compositor layer. The
+     * blur is rasterised once and the hover repaints above it become a cheap
+     * composite. Two layers is a bounded, deliberate memory cost.
+     */
+    will-change: transform;
+}
+
+.blob-top {
+    top: -12%;
+    left: -20%;
+    background: var(--color-wash-1);
+}
+
+.blob-bottom {
+    bottom: -12%;
+    right: -20%;
+    background: var(--color-wash-2);
+}

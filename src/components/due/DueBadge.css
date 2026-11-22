@@ -1,0 +1,55 @@
+/**
+ * Status badges [R2, R3].
+ *
+ * Amber and red come from the STATUS tokens, which are never themed — a
+ * reminder that reads as branding has stopped being a reminder. The shared
+ * `.due-*` modifiers here are reused by the due list and the What's-due
+ * section, so status colour is decided once.
+ */
+
+.due-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    line-height: 1.375rem;
+    white-space: nowrap;
+}
+
+.due-badge.due-soon {
+    background-color: var(--color-warning-surface);
+    color: var(--color-warning);
+}
+
+.due-badge.due-overdue {
+    background-color: var(--color-error-surface);
+    color: var(--color-error-text);
+}
+
+.due-badge.due-ok {
+    background-color: var(--color-success-surface);
+    color: var(--color-success);
+}
+
+/* Text-only variants, for rows that already have their own container. */
+.due-text.due-soon {
+    color: var(--color-warning);
+}
+.due-text.due-overdue {
+    color: var(--color-error-text);
+}
+.due-text.due-ok {
+    color: var(--color-success);
+}
+
+/* The leading edge a due row carries — same device the app uses for "unread"
+   and "owned", in a status colour rather than the accent. */
+.due-edge.due-soon {
+    border-inline-start: 3px solid var(--color-warning);
+}
+.due-edge.due-overdue {
+    border-inline-start: 3px solid var(--color-error);
+}

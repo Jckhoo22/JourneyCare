@@ -1,0 +1,159 @@
+{
+    "//": "Bundled maintenance presets [L3]. `km` and `months` are the DEFAULT interval a log seeds from — L4 lets any entry override them, and the override is what gets stored, so editing a number here never rewrites a service already recorded. A type may have km, months, both, or neither: 'bulbs' has neither because a bulb is replaced when it fails, not on a schedule, and nextDueForType returns null for a type with no interval rather than inventing urgency. Intervals are Malaysia-typical and conservative — a reminder that fires slightly early is a nudge, one that fires late is a missed service. The `group` field only decides which optgroup a type appears under; it is display, never identity, so regrouping a type is safe for logs already written against its id. Ids are FOREVER: a stored log and a car's lastByType key both reference them.",
+    "groups": [
+        {
+            "id": "routine",
+            "label": "Routine servicing"
+        },
+        {
+            "id": "parts",
+            "label": "Parts & replacements"
+        },
+        {
+            "id": "fluids",
+            "label": "Fluids"
+        },
+        {
+            "id": "yearly",
+            "label": "Once a year"
+        },
+        {
+            "id": "other",
+            "label": "Other"
+        }
+    ],
+    "types": [
+        {
+            "id": "engine_oil",
+            "label": "Engine oil",
+            "group": "routine",
+            "km": 10000,
+            "months": 6
+        },
+        {
+            "id": "oil_filter",
+            "label": "Oil filter",
+            "group": "routine",
+            "km": 10000,
+            "months": 6
+        },
+        {
+            "id": "inspection",
+            "label": "Inspection / service — general",
+            "group": "routine",
+            "km": 10000,
+            "months": 6
+        },
+        {
+            "id": "alignment",
+            "label": "Alignment / balancing",
+            "group": "routine",
+            "km": 10000
+        },
+        {
+            "id": "brake_pads",
+            "label": "Brake pads",
+            "group": "parts",
+            "km": 40000
+        },
+        {
+            "id": "brake_discs",
+            "label": "Brake discs / rotors",
+            "group": "parts",
+            "km": 80000
+        },
+        {
+            "id": "battery",
+            "label": "Battery",
+            "group": "parts",
+            "months": 24
+        },
+        {
+            "id": "tires",
+            "label": "Tyres",
+            "group": "parts",
+            "km": 50000,
+            "months": 48
+        },
+        {
+            "id": "absorbers",
+            "label": "Absorbers / shocks",
+            "group": "parts",
+            "km": 80000
+        },
+        {
+            "id": "wipers",
+            "label": "Wiper blades",
+            "group": "parts",
+            "months": 12
+        },
+        {
+            "id": "air_filter",
+            "label": "Air filter",
+            "group": "parts",
+            "km": 20000,
+            "months": 12
+        },
+        {
+            "id": "cabin_filter",
+            "label": "Cabin / aircond filter",
+            "group": "parts",
+            "km": 20000,
+            "months": 12
+        },
+        {
+            "id": "spark_plugs",
+            "label": "Spark plugs",
+            "group": "parts",
+            "km": 40000
+        },
+        {
+            "id": "timing_belt",
+            "label": "Timing belt",
+            "group": "parts",
+            "km": 100000,
+            "months": 60
+        },
+        {
+            "id": "bulbs",
+            "label": "Bulbs / lights",
+            "group": "parts"
+        },
+        {
+            "id": "brake_fluid",
+            "label": "Brake fluid",
+            "group": "fluids",
+            "months": 24
+        },
+        {
+            "id": "coolant",
+            "label": "Radiator coolant",
+            "group": "fluids",
+            "km": 40000,
+            "months": 24
+        },
+        {
+            "id": "transmission_fluid",
+            "label": "ATF / gearbox oil",
+            "group": "fluids",
+            "km": 40000
+        },
+        {
+            "id": "road_tax_insurance",
+            "label": "Road tax & insurance",
+            "group": "yearly",
+            "months": 12
+        },
+        {
+            "id": "aircond",
+            "label": "Aircond service",
+            "group": "yearly",
+            "months": 12
+        },
+        {
+            "id": "custom",
+            "label": "Something else",
+            "group": "other"
+        }
+    ]
+}

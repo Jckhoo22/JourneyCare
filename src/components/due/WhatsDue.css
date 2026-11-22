@@ -1,0 +1,104 @@
+/* What's due across a group's cars [R3]. Status colours from DueBadge.css. */
+
+.whatsdue {
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+}
+
+.whatsdue-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    color: var(--color-text-muted);
+}
+
+/* Sentence case, matched to .spend-title / .group-cars-title so the
+   three sections on the group page share one section-header voice.
+   The head row above already provides the muted colour and the icon. */
+.whatsdue-title {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+}
+
+/* Slim all-clear row [Group polish].
+   The state the app is in most of the time, so the section collapses to a
+   single status line rather than sitting in a full card. Borderless — a
+   status line, not a panel. `--space-2` vertical padding lands the row at
+   roughly the height of the section headings around it, keeping the page
+   rhythm intact when this state renders. */
+.whatsdue-clear {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-subtle);
+}
+
+.whatsdue-clear-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-success);
+    flex-shrink: 0;
+}
+
+.whatsdue-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.whatsdue-item {
+    background-color: var(--color-surface-muted);
+    border-radius: var(--radius-field);
+    overflow: hidden;
+}
+
+/* The whole row goes to the car — that's the thing you'd do next. */
+.whatsdue-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: var(--tap-min);
+    padding: var(--space-3);
+    text-decoration: none;
+}
+.whatsdue-link:hover {
+    background-color: var(--color-surface-hover);
+}
+
+.whatsdue-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.whatsdue-what {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.whatsdue-car {
+    font-size: var(--text-xs);
+    color: var(--color-text-body);
+}
+
+.whatsdue-when {
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+}

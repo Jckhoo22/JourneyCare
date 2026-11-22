@@ -1,0 +1,259 @@
+/**
+ * The spend panels [S1–S3] — one stylesheet, because the car page's by-type
+ * breakdown and the group page's per-car breakdown are the same object: a
+ * headline figure over a list of labelled amounts. Two stylesheets would be two
+ * definitions of one row, drifting apart at the first change.
+ *
+ * Numbers only. No bars, no donut, no colour coding — a family looking at
+ * "what did the tyres cost" is reading a figure, and chart furniture would be
+ * decoration around the answer. The one place colour appears is the recalculate
+ * disclosure, and it borrows the shared button styles rather than inventing
+ * any.
+ *
+ * Mobile first: the label column flexes and truncates, the amount never does —
+ * a wrapped "RM 1,240.50" is unreadable, a shortened service name is not.
+ */
+
+.spend-panel {
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+}
+
+/* Slim RM 0 state [Group polish].
+   Every brand-new group sits in this state, so the section collapses to a
+   single status line — no card, no big figure, no per-car list. Wraps to
+   two lines on a very narrow phone via flex-wrap rather than truncating
+   the message. The individual "RM 0" and the empty message are separate
+   spans so tests that assert either literal via getByText still match. */
+.spend-clear {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    padding: var(--space-2) 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-subtle);
+}
+
+.spend-clear-label {
+    font-weight: var(--weight-medium);
+    color: var(--color-text-body);
+}
+
+.spend-clear-dot,
+.spend-clear-dash {
+    color: var(--color-text-faint);
+}
+
+.spend-clear-amount {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-body);
+}
+
+.spend-clear-body {
+    /* Wraps under the label + amount on a narrow phone without breaking
+       up "RM 0" itself. */
+    color: var(--color-text-subtle);
+}
+
+.spend-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+}
+
+/* Sentence case since the car polish pass — the panel head reads as a
+   heading now, not an eyebrow. Kept the same size/weight so the label
+   still sits back from the display figure below it. */
+.spend-title {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+}
+
+/* Pushed to the right of the head row. */
+.spend-head-spacer {
+    flex: 1;
+}
+
+/* ── The headline figure ─────────────────────────────────────────────────────
+   Display size, because it is the answer to the question the panel asks. The
+   label sits UNDER it: "RM 1,240.50 / All time" reads as one statement, where a
+   label above would make the reader hold a caption in mind before the number
+   arrives. Tabular figures so a column of amounts lines up on the decimal. */
+.spend-total {
+    margin: var(--space-3) 0 0 0;
+    font-family: var(--font-display);
+    font-size: var(--text-display);
+    /* Medium weight against the display face — a big characterful figure
+       reads warmer here than a bold one, and 500 keeps the RM sign from
+       out-shouting the amount. */
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+}
+
+.spend-total-label {
+    margin: var(--space-1) 0 0 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+}
+
+/* ── The breakdown ──────────────────────────────────────────────────────── */
+.spend-subhead {
+    margin: var(--space-5) 0 var(--space-2) 0;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-subtle);
+}
+
+.spend-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* The car page's breakdown no longer sits under a headline figure — the total
+   moved to the CarStats row — so its list is the panel's first content and
+   needs the gap the headline used to provide. */
+.spend-list-top {
+    margin-top: var(--space-3);
+}
+
+/* A hairline between rows rather than a filled row background: the panel is
+   already a surface, and a second one inside it is the nested-panel look this
+   project doesn't do. */
+.spend-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--color-border-subtle);
+}
+.spend-row:first-child {
+    border-top: none;
+}
+
+.spend-row-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.spend-row-label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+}
+
+.spend-row-meta {
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+}
+
+.spend-row-amount {
+    flex-shrink: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-body);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* The group panel's rows go to the car. Padded to a 44px tap target. */
+.spend-row-link {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: var(--tap-min);
+    padding: var(--space-3) var(--space-2);
+    margin: 0 calc(var(--space-2) * -1);
+    border-radius: var(--radius-field);
+    text-decoration: none;
+}
+.spend-row-link:hover {
+    background-color: var(--color-surface-hover);
+}
+
+/* Rows that are links carry their own padding, so the li must not add more. */
+.spend-row-linked {
+    padding: 0;
+}
+
+/* Inside a link the label is the flexing half. `min-width: 0` is what lets it
+   actually shrink — a flex item's default min-width is its content, which is
+   how a long car nickname would otherwise push the row past 375px. */
+.spend-row-link .spend-row-label {
+    flex: 1;
+    min-width: 0;
+}
+
+.spend-note,
+.spend-empty {
+    margin: var(--space-3) 0 0 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+/* ── Recalculate ─────────────────────────────────────────────────────────────
+   Deliberately undersold. It is a repair tool that reads the whole group's
+   history, so it lives behind a menu button and then behind a confirm — two
+   steps, neither of which competes with anything on the page. */
+.spend-menu-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--tap-min);
+    height: var(--tap-min);
+    /* Pulled out of the head row's height so a 44px target doesn't stretch it. */
+    margin: calc((var(--tap-min) - 1.25rem) / -2) calc(var(--space-2) * -1);
+    background: none;
+    border: none;
+    border-radius: var(--radius-field);
+    color: var(--color-text-icon);
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+}
+.spend-menu-btn:hover {
+    color: var(--color-text-icon-hover);
+    background-color: var(--color-surface-hover);
+}
+
+.spend-menu {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border-subtle);
+}
+
+.spend-menu-body {
+    margin: var(--space-2) 0 var(--space-3) 0;
+    font-size: var(--text-xs);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+.spend-menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+@media (min-width: 600px) {
+    .spend-menu-actions {
+        flex-direction: row;
+        align-items: center;
+    }
+}

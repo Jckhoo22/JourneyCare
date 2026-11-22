@@ -1,0 +1,73 @@
+/**
+ * Type-to-search combobox chrome. Piggybacks on the shared input classes
+ * (.input-group / .input-wrapper / .form-control / .field-error-text) so a
+ * combo, a text field and a select sit at the same height, radius, focus
+ * ring and error treatment.
+ *
+ * Only the dropdown list and the small combo-specific tweaks live here.
+ */
+
+@import "../login_register/AuthTextField.css";
+
+.combo-input {
+    cursor: text;
+}
+
+.combo-input:disabled {
+    cursor: not-allowed;
+}
+
+/* Decorative chevron matching SelectField's — taps fall through to the
+   input, which opens the list on focus. */
+.combo-chevron {
+    pointer-events: none;
+    color: var(--color-text-subtle);
+}
+
+/* ── Dropdown list ────────────────────────────────────────────────────────
+   Anchored under the wrapper so it tracks the field on scroll. Max-height
+   keeps a ~40-entry catalogue from covering the rest of the form on a
+   ~390px phone; overflow-y: auto turns it into a scrollable panel when it
+   overflows. z-index sits above sibling fields but well under the toast /
+   modal layers. */
+.combo-list {
+    position: absolute;
+    top: calc(100% + var(--space-1));
+    left: 0;
+    right: 0;
+    z-index: 20;
+    margin: 0;
+    padding: var(--space-1) 0;
+    max-height: 15rem;
+    overflow-y: auto;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-field);
+    box-shadow: var(--shadow-card);
+    list-style: none;
+}
+
+.combo-option {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap-min);
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-body);
+    color: var(--color-text);
+    cursor: pointer;
+    /* Break-word so a long free-text catalogue entry never forces a
+       horizontal scroll inside the panel on a narrow screen. */
+    overflow-wrap: anywhere;
+}
+
+.combo-option:hover,
+.combo-option.active {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-active);
+}
+
+/* The already-committed pick reads as chosen even when another row is
+   highlighted, so the user can see which one they're currently on. */
+.combo-option[aria-selected="true"] {
+    font-weight: var(--weight-semibold);
+}

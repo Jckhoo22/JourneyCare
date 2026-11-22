@@ -1,0 +1,49 @@
+/* Add car + Edit car [C1–C3, C8]. Shell chrome is app-shell.css; per-page
+   surfaces live inside `.app-form-column` from that same stylesheet.
+   EditCar imports this file to share the below classes. */
+
+/* The form wrapper holds the Details card + the Save button. `gap` at
+   space-4 governs the space between them; Save sits OUTSIDE the card
+   because it commits the whole form, so it belongs to neither. */
+.car-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* Section header inside a car-form card — matches the .spend-head /
+   .whatsdue-head / .group-cars-head grammar used elsewhere in the app:
+   small icon + sentence-case title, muted head colour, tight gap. */
+.car-form-section-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    color: var(--color-text-muted);
+}
+
+.car-form-section-title {
+    margin: 0;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+}
+
+/* ── Save row ──────────────────────────────────────────────────────────────
+   The Save button + optional reason line sit as one block at the foot of
+   the form. Gap is tight — the hint is scoped to this button, not the form
+   above it. */
+.car-form-save {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+/* One-liner beneath a disabled Save that names what's missing. Centered so
+   it reads as belonging to the button rather than to the field above. */
+.car-form-hint {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--color-text-subtle);
+    text-align: center;
+}

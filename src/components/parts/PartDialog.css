@@ -1,0 +1,70 @@
+/**
+ * Add/Edit part dialog — FORM styles only.
+ *
+ * The modal shell (backdrop, sheet-on-phone, centred-card-on-desktop,
+ * header + body + footer) lives in `components/ui/Modal.css`. This file
+ * owns only the fields inside the body.
+ */
+
+.part-dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.part-dialog-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.part-dialog-label {
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-subtle);
+}
+
+.part-dialog-input {
+    width: 100%;
+    min-height: var(--control-height);
+    padding: 0 var(--space-3);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-field);
+    /* 16px minimum on iOS to avoid the zoom-on-focus jump. Enforced
+       globally in index.css but stated here for the local reader. */
+    font-size: 1rem;
+    color: var(--color-text);
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
+}
+.part-dialog-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+.part-dialog-input[aria-invalid="true"] {
+    border-color: var(--color-error);
+}
+
+/* Native select needs a bit of internal padding compensation to match
+   the plain text input's optical alignment. */
+select.part-dialog-input {
+    padding-left: calc(var(--space-3) - 2px);
+    padding-right: var(--space-6);
+}
+
+.part-dialog-hint {
+    font-size: var(--text-xs);
+    line-height: var(--leading-loose);
+    color: var(--color-text-subtle);
+}
+
+.part-dialog-error {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--color-error-text);
+}

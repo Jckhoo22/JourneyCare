@@ -1,0 +1,76 @@
+/**
+ * Rename form for a group's name. [G12]
+ *
+ * Buttons come from styles/app-shell.css (via the Button primitive). The
+ * form now renders as its own panel below the Manage-group admin card —
+ * the h1+pencil display that used to live above this form is gone, and the
+ * `.group-name-row` / `.group-name-edit` classes went with it.
+ */
+
+.group-name-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+}
+
+.group-name-label {
+    font-size: var(--text-label);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-subtle);
+}
+
+/* A prominent field for a short, meaningful string. Not display-size any more —
+   the h1 it once replaced is gone, so there's nothing to size against — but
+   still noticeably larger than a body field, because renaming a group is the
+   only thing on the panel. 16px+ so iOS Safari doesn't zoom on focus. */
+.group-name-input {
+    width: 100%;
+    min-height: var(--control-height);
+    padding: var(--space-2) var(--space-3);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-field);
+    font-family: inherit;
+    font-size: var(--text-title);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.group-name-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-ring);
+}
+.group-name-input[aria-invalid="true"] {
+    border-color: var(--color-error);
+}
+.group-name-input:disabled {
+    background-color: var(--color-surface-muted);
+    opacity: 0.7;
+}
+
+.group-name-error {
+    font-size: var(--text-xs);
+    color: var(--color-error-text);
+}
+
+/* Stacked on a phone; side by side once there's room. */
+.group-name-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+}
+
+@media (min-width: 600px) {
+    .group-name-actions {
+        flex-direction: row;
+    }
+}

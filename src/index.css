@@ -1,0 +1,82 @@
+/**
+ * Base + reset.
+ *
+ * One typeface for the whole app: `body` sets var(--font-sans) and everything
+ * inherits it. Form controls are the exception browsers make for themselves,
+ * so they're opted back in explicitly below — without that, buttons and inputs
+ * silently render in the UA's own font at its own size.
+ */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    /* Stops iOS Safari inflating type in landscape. */
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    margin: 0;
+    background-color: var(--color-page);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--leading-normal);
+    color: var(--color-text-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Nothing in this app is meant to scroll sideways. Anything that tries is
+       a bug — this keeps it from becoming the user's problem first. */
+    overflow-x: hidden;
+}
+
+/* Form controls don't inherit type from the page. Stating it once here means
+   no component has to remember to. */
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+}
+
+/* 16px floor on anything typed into. Below this, iOS Safari zooms the viewport
+   on focus and never zooms back out. */
+input,
+select,
+textarea {
+    font-size: max(var(--text-body), 16px);
+}
+
+/* Images and media never widen their container. */
+img,
+svg,
+video,
+canvas {
+    max-width: 100%;
+}
+
+code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Courier New", monospace;
+}
+
+/* A visible, consistent focus ring for keyboard users on every interactive
+   element — the reskin removed the shadows that used to imply focus. */
+:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
